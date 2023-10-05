@@ -138,6 +138,7 @@ func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *
 	}
 
 	for {
+		fmt.Println("track routine")
 		select {
 		case <-ctx.Done():
 			s.Logger.Warning("Tracking routine will exit")
