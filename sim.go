@@ -126,6 +126,7 @@ func (s *SimGo) Track(name string, report interface{}) (chan bool, error) {
 			select {
 			case <-checker.C:
 				timeNow := time.Now().Add(-5 * time.Second)
+				s.Logger.Info("Timeout checker")
 				if !connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeNow) {
 					s.Logger.Info("Last received message was received 5 sec ago. Restart tracking")
 					sc.Close()
