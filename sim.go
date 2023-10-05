@@ -234,7 +234,7 @@ func convertToInterface(val reflect.Value, vars []sim.SimVar) interface{} {
 	found := make([]string, 0)
 	for _, simVar := range vars {
 		fmt.Printf("iterateSimVars(): Name: %s                                               Index: %b    Unit: %s\n", simVar.Name, simVar.Index, simVar.Unit)
-		for j := 0; j < val.NumField(); j++ {
+		for j := 0; j < val.Type().NumField(); j++ {
 			nameTag, _ := val.Type().Field(j).Tag.Lookup("name")
 			indexTag, _ := val.Type().Field(j).Tag.Lookup("index")
 			if indexTag == "" {
