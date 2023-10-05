@@ -126,8 +126,10 @@ func (s *SimGo) Track(name string, report interface{}) error {
 					s.Logger.Info("SC Closed")
 					connectToMsfsInProgress = true
 					cancel()
-					return
 				}
+			case <-s.Context.Done():
+				s.Logger.Warning("Tracking routine will exit")
+				return
 			}
 		}
 	}()
@@ -135,9 +137,6 @@ func (s *SimGo) Track(name string, report interface{}) error {
 	go func() {
 		for {
 			select {
-			case <-s.Context.Done():
-				s.Logger.Warning("Tracking routine will exit")
-				return
 			case open := <-s.Connection:
 				s.Logger.Debugf("Open: %b", open)
 			case state := <-s.State:
