@@ -185,7 +185,7 @@ func (s *SimGo) ConnectToSimVar(sc *sim.EasySimConnect, listSimVar []sim.SimVar,
 	for {
 		select {
 		case sv := <-cSimVar:
-			s.TrackEvent <- convertToInterface(&result, sv)
+			s.TrackEvent <- convertToInterface(reflect.ValueOf(result), sv)
 		case <-crashed:
 			s.Logger.Error("Your are crashed !!")
 			<-sc.Close() // Wait close confirmation
@@ -229,12 +229,12 @@ func convertToSimSimVar(a interface{}) []sim.SimVar {
 	return vars
 }
 
-func convertToInterface(a interface{}, vars []sim.SimVar) interface{} {
-	v := reflect.ValueOf(a).Elem()
+func convertToInterface(val reflect.Value, vars []sim.SimVar) interface{} {
+	v := val.Elem()
 	found := make([]string, 0)
 	for _, simVar := range vars {
 		fmt.Printf("iterateSimVars(): Name: %s                                               Index: %b    Unit: %s\n", simVar.Name, simVar.Index, simVar.Unit)
-		for j := 0; j < v.Type().NumField(); j++ {
+		for j := 0; j < v.NumField(); j++ {
 			nameTag, _ := v.Type().Field(j).Tag.Lookup("name")
 			indexTag, _ := v.Type().Field(j).Tag.Lookup("index")
 			if indexTag == "" {
@@ -249,5 +249,5 @@ func convertToInterface(a interface{}, vars []sim.SimVar) interface{} {
 			}
 		}
 	}
-	return a
+	return val.Addr()
 }
