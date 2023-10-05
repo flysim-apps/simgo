@@ -195,14 +195,23 @@ func (s *SimGo) ConnectToSimVar(sc *sim.EasySimConnect, listSimVar []sim.SimVar,
 	}
 }
 
-func convertToSimSimVar(v reflect.Value) []sim.SimVar {
+func convertToSimSimVar(val reflect.Value) []sim.SimVar {
 	vars := make([]sim.SimVar, 0)
+	if val.Kind() == reflect.Interface && !val.IsNil() {
+		elm := val.Elem()
+		if elm.Kind() == reflect.Ptr && !elm.IsNil() && elm.Elem().Kind() == reflect.Ptr {
+			val = elm
+		}
+	}
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
 
-	for i := 0; i < v.Type().NumField(); i++ {
-		nameTag, _ := v.Type().Field(i).Tag.Lookup("name")
-		indexTag, _ := v.Type().Field(i).Tag.Lookup("index")
-		unitTag, _ := v.Type().Field(i).Tag.Lookup("unit")
-		settableTag, _ := v.Type().Field(i).Tag.Lookup("settable")
+	for i := 0; i < val.Type().NumField(); i++ {
+		nameTag, _ := val.Type().Field(i).Tag.Lookup("name")
+		indexTag, _ := val.Type().Field(i).Tag.Lookup("index")
+		unitTag, _ := val.Type().Field(i).Tag.Lookup("unit")
+		settableTag, _ := val.Type().Field(i).Tag.Lookup("settable")
 
 		if nameTag == "" || unitTag == "" {
 			continue

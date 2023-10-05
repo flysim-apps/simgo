@@ -20,3 +20,14 @@ func TestConvertToInterface(t *testing.T) {
 	v := Report{}
 	convertToInterface(reflect.ValueOf(&v), vars)
 }
+
+func TestConvertWithReflect(t *testing.T) {
+	some := func(v interface{}) {
+		vars := convertToSimSimVar(reflect.ValueOf(v))
+		assert.Greater(t, len(vars), 0, "vars is zero")
+
+		convertToInterface(reflect.ValueOf(v), vars)
+	}
+
+	some(&Report{})
+}
