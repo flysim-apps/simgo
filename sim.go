@@ -118,7 +118,7 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 					s.Logger.Info("Timeout checker")
 					if !connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeNow) {
 						s.Logger.Info("Last received message was received 5 sec ago. Restart tracking")
-						cancel()
+						defer cancel()
 						return
 					}
 				}
