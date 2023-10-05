@@ -248,5 +248,5 @@ func convertToInterface(val reflect.Value, vars []sim.SimVar) interface{} {
 			}
 		}
 	}
-	return r
+	return r.Interface()
 }
