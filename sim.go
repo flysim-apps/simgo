@@ -125,7 +125,7 @@ func (s *SimGo) Track(name string, report interface{}) error {
 					sc.Close()
 					s.Logger.Info("SC Closed")
 					connectToMsfsInProgress = true
-					defer cancel()
+					cancel()
 					return
 				}
 			}
