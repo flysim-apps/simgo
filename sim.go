@@ -32,24 +32,14 @@ func NewSimGo(logger *logging.Logger) *SimGo {
 }
 
 // starts web socket server on given host and port
-func (s *SimGo) Start(httpListen string) chan bool {
-	c := make(chan bool)
+func (s *SimGo) Start(httpListen string) error {
 	s.Socket = websockets.New()
 	http.HandleFunc("/socket.io", s.Socket.Serve)
-	go func() {
-		s.Logger.Debugf("Socket starting on port %s", httpListen)
-		go func() {
-			c <- true
-		}()
-		if err := http.ListenAndServe(httpListen, nil); err != nil {
-			go func() {
-				s.Logger.Errorf("Server could not be started! Reason: %s", err.Error())
-				s.Error = err
-				s.State <- STATE_FATAL
-			}()
-		}
-	}()
-	return c
+	s.Logger.Debugf("Socket starting on port %s", httpListen)
+	if err := http.ListenAndServe(httpListen, nil); err != nil {
+		return errors.New(fmt.Sprintf("Server could not be started! Reason: %s", err.Error()))
+	}
+	return nil
 }
 
 // connects to MSFS
@@ -88,6 +78,7 @@ func (s *SimGo) connectToMsfs(name string) (*sim.EasySimConnect, error) {
 				s.Connection = c
 				s.Error = nil
 				s.State <- STATE_CONNECTION_READY
+				return
 			}()
 			return
 		}
@@ -101,10 +92,28 @@ var lastMessageReceived time.Time
 
 func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, trackID int) {
 	go recoverer(maxTries, trackID, func() {
-
+		checker := time.NewTicker(15 * time.Second)
+		ctx, cancel := context.WithCancel(context.Background())
 		wait := sync.WaitGroup{}
 
-		go s.checker(name, report, &wait)
+		defer checker.Stop()
+
+		go s.track(name, report, ctx, &wait)
+
+		go func() {
+			for {
+				select {
+				case <-checker.C:
+					timeNow := time.Now().Add(-5 * time.Second)
+					s.Logger.Info("Timeout checker")
+					if !connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeNow) {
+						s.Logger.Info("Last received message was received 5 sec ago. Cancel tracking")
+						cancel()
+						return
+					}
+				}
+			}
+		}()
 
 		wait.Wait()
 
@@ -112,30 +121,6 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 
 		return
 	})
-}
-
-func (s *SimGo) checker(name string, report interface{}, wg *sync.WaitGroup) {
-	checker := time.NewTicker(15 * time.Second)
-	ctx, cancel := context.WithCancel(context.Background())
-	wg.Add(1)
-
-	defer wg.Done()
-	defer checker.Stop()
-
-	go s.track(name, report, ctx, wg)
-
-	for {
-		select {
-		case <-checker.C:
-			timeNow := time.Now().Add(-5 * time.Second)
-			s.Logger.Info("Timeout checker")
-			if !connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeNow) {
-				s.Logger.Info("Last received message was received 5 sec ago. Cancel tracking")
-				cancel()
-				return
-			}
-		}
-	}
 }
 
 func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *sync.WaitGroup) {
