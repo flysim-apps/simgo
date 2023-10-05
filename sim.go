@@ -158,7 +158,7 @@ func (s *SimGo) Track(name string, report interface{}) error {
 }
 
 func (s *SimGo) trackSimVars(sc *sim.EasySimConnect, report interface{}) error {
-	if err := s.ConnectToSimVar(sc, convertToSimSimVar(report), report); err != nil {
+	if err := s.ConnectToSimVar(sc, convertToSimSimVar(reflect.ValueOf(report)), report); err != nil {
 		return errors.New(fmt.Sprintf("failed to connect to SimVar: %v ", err.Error()))
 	}
 	return nil
@@ -195,9 +195,8 @@ func (s *SimGo) ConnectToSimVar(sc *sim.EasySimConnect, listSimVar []sim.SimVar,
 	}
 }
 
-func convertToSimSimVar(a interface{}) []sim.SimVar {
+func convertToSimSimVar(v reflect.Value) []sim.SimVar {
 	vars := make([]sim.SimVar, 0)
-	v := reflect.ValueOf(a)
 
 	for i := 0; i < v.Type().NumField(); i++ {
 		nameTag, _ := v.Type().Field(i).Tag.Lookup("name")
@@ -230,13 +229,21 @@ func convertToSimSimVar(a interface{}) []sim.SimVar {
 }
 
 func convertToInterface(val reflect.Value, vars []sim.SimVar) interface{} {
-	v := val.Elem()
+	if val.Kind() == reflect.Interface && !val.IsNil() {
+		elm := val.Elem()
+		if elm.Kind() == reflect.Ptr && !elm.IsNil() && elm.Elem().Kind() == reflect.Ptr {
+			val = elm
+		}
+	}
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
 	found := make([]string, 0)
 	for _, simVar := range vars {
 		fmt.Printf("iterateSimVars(): Name: %s                                               Index: %b    Unit: %s\n", simVar.Name, simVar.Index, simVar.Unit)
-		for j := 0; j < v.NumField(); j++ {
-			nameTag, _ := v.Type().Field(j).Tag.Lookup("name")
-			indexTag, _ := v.Type().Field(j).Tag.Lookup("index")
+		for j := 0; j < val.NumField(); j++ {
+			nameTag, _ := val.Type().Field(j).Tag.Lookup("name")
+			indexTag, _ := val.Type().Field(j).Tag.Lookup("index")
 			if indexTag == "" {
 				indexTag = "0"
 			}
@@ -245,9 +252,9 @@ func convertToInterface(val reflect.Value, vars []sim.SimVar) interface{} {
 
 			if simVar.Index == idx && simVar.Name == nameTag {
 				found = append(found, fmt.Sprintf("Name: %s                   Index: %b    Unit: %s\n", simVar.Name, simVar.Index, simVar.Unit))
-				getValue(v.Field(j), simVar)
+				getValue(val.Field(j), simVar)
 			}
 		}
 	}
-	return val.Addr()
+	return val
 }

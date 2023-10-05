@@ -27,6 +27,7 @@ const (
 )
 
 type Report struct {
+	fieldAddress          uintptr
 	AltitudeAboveGround   float64 `name:"PLANE ALT ABOVE GROUND" unit:"feet"`
 	PlaneAltitude         float64 `name:"PLANE ALTITUDE" unit:"Radians"`
 	Altitude              float64 `name:"INDICATED ALTITUDE" unit:"feet"`
