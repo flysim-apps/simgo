@@ -111,7 +111,7 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 		go func() {
 			defer wait.Done()
 			defer fmt.Println(`Exiting Track`)
-			s.Track(name, report)
+			s.Track(name, report, ctx)
 		}()
 
 		go func() {
@@ -126,7 +126,6 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 					if !connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeNow) {
 						s.Logger.Info("Last received message was received 5 sec ago. Cancel tracking")
 						cancel()
-						return
 					}
 				}
 			}
@@ -140,7 +139,7 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 	})
 }
 
-func (s *SimGo) Track(name string, report interface{}) {
+func (s *SimGo) Track(name string, report interface{}, ctx context.Context) {
 	sc, err := s.connectToMsfs(name)
 	defer sc.Close()
 	if err != nil {
@@ -149,7 +148,7 @@ func (s *SimGo) Track(name string, report interface{}) {
 
 	for {
 		select {
-		case <-s.Context.Done():
+		case <-ctx.Done():
 			s.Logger.Warning("Tracking routine will exit")
 			connectToMsfsInProgress = true
 			return
