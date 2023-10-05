@@ -199,7 +199,7 @@ func convertToSimSimVar(a interface{}) []sim.SimVar {
 	vars := make([]sim.SimVar, 0)
 	v := reflect.ValueOf(a)
 
-	for i := 0; i < v.NumField(); i++ {
+	for i := 0; i < v.Type().NumField(); i++ {
 		nameTag, _ := v.Type().Field(i).Tag.Lookup("name")
 		indexTag, _ := v.Type().Field(i).Tag.Lookup("index")
 		unitTag, _ := v.Type().Field(i).Tag.Lookup("unit")
