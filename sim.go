@@ -101,41 +101,14 @@ var lastMessageReceived time.Time
 
 func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, trackID int) {
 	go recoverer(maxTries, trackID, func() {
-		checker := time.NewTicker(15 * time.Second)
-		defer checker.Stop()
 
 		ctx, cancel := context.WithCancel(context.Background())
 
-		defer cancel()
+		wait := sync.WaitGroup{}
 
-		wait := &sync.WaitGroup{}
-		wait.Add(2)
+		go s.track(name, report, ctx, &wait)
 
-		go func() {
-			defer wait.Done()
-			defer fmt.Println(`Exiting Track`)
-			s.Track(name, report, ctx)
-		}()
-
-		go func() {
-			defer wait.Done()
-			defer fmt.Println(`Exiting `)
-
-			for {
-				select {
-				case <-ctx.Done():
-					s.Logger.Warning("Checker routine will exit")
-					return
-				case <-checker.C:
-					timeNow := time.Now().Add(-5 * time.Second)
-					s.Logger.Info("Timeout checker")
-					if !connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeNow) {
-						s.Logger.Info("Last received message was received 5 sec ago. Cancel tracking")
-						cancel()
-					}
-				}
-			}
-		}()
+		go s.checker(cancel, &wait)
 
 		wait.Wait()
 
@@ -145,8 +118,34 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 	})
 }
 
-func (s *SimGo) Track(name string, report interface{}, ctx context.Context) {
+func (s *SimGo) checker(cancel context.CancelFunc, wg *sync.WaitGroup) {
+	checker := time.NewTicker(15 * time.Second)
+	wg.Add(1)
+
+	defer wg.Done()
+	defer fmt.Println(`Exiting `)
+	defer checker.Stop()
+	defer cancel()
+
+	for {
+		select {
+		case <-checker.C:
+			timeNow := time.Now().Add(-5 * time.Second)
+			s.Logger.Info("Timeout checker")
+			if !connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeNow) {
+				s.Logger.Info("Last received message was received 5 sec ago. Cancel tracking")
+				return
+			}
+		}
+	}
+}
+
+func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *sync.WaitGroup) {
+	wg.Add(1)
+
 	sc, err := s.connectToMsfs(name)
+	defer wg.Done()
+	defer fmt.Println(`Exiting `)
 	defer sc.Close()
 	if err != nil {
 		panic(("connection to MSFS has been failed. Reason: %s" + err.Error()))
