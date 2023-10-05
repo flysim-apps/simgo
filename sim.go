@@ -100,42 +100,54 @@ var lastMessageReceived time.Time
 
 func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, trackID int) {
 	go recoverer(maxTries, trackID, func() {
-		q, _ := s.Track(name, report)
+		checker := time.NewTicker(30 * time.Second)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		s.Context = ctx
+
+		q, err := s.Track(name, report)
+		if err != nil {
+			s.Logger.Errorf("Tracking error: %v", err.Error())
+		}
+
+		go func() {
+			for {
+				select {
+				case <-checker.C:
+					timeNow := time.Now().Add(-5 * time.Second)
+					s.Logger.Info("Timeout checker")
+					if !connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeNow) {
+						s.Logger.Info("Last received message was received 5 sec ago. Restart tracking")
+						cancel()
+						return
+					}
+				}
+			}
+		}()
 
 		<-q
+
+		s.Logger.Warning("Exiting from tracker routine...")
 
 		return
 	})
 }
 
-func (s *SimGo) Track(name string, report interface{}) (chan bool, error) {
+func (s *SimGo) Track(name string, report interface{}) (<-chan bool, error) {
 	sc, err := s.connectToMsfs(name)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("connection to MSFS has been failed. Reason: %s", err.Error()))
 	}
-
-	checker := time.NewTicker(30 * time.Second)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	s.Context = ctx
 
 	quit := make(chan bool, 1)
 
 	go func() {
 		for {
 			select {
-			case <-checker.C:
-				timeNow := time.Now().Add(-5 * time.Second)
-				s.Logger.Info("Timeout checker")
-				if !connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeNow) {
-					s.Logger.Info("Last received message was received 5 sec ago. Restart tracking")
-					sc.Close()
-					s.Logger.Info("SC Closed")
-					connectToMsfsInProgress = true
-					cancel()
-				}
 			case <-s.Context.Done():
 				s.Logger.Warning("Tracking routine will exit")
+				sc.Close()
+				connectToMsfsInProgress = true
 				quit <- true
 				return
 			case open := <-s.Connection:
@@ -236,7 +248,7 @@ func convertToInterface(val reflect.Value, vars []sim.SimVar) interface{} {
 	found := make([]string, 0)
 	r := reflect.New(reflect.TypeOf(val.Interface())).Elem()
 	for _, simVar := range vars {
-		fmt.Printf("iterateSimVars(): Name: %s                                               Index: %b    Unit: %s\n", simVar.Name, simVar.Index, simVar.Unit)
+		//fmt.Printf("iterateSimVars(): Name: %s                                               Index: %b    Unit: %s\n", simVar.Name, simVar.Index, simVar.Unit)
 		for j := 0; j < val.NumField(); j++ {
 			nameTag, _ := val.Type().Field(j).Tag.Lookup("name")
 			indexTag, _ := val.Type().Field(j).Tag.Lookup("index")
