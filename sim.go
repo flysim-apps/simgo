@@ -127,9 +127,7 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 
 		wait.Wait()
 
-		s.Logger.Warning("Exiting from tracker routine...")
-
-		return
+		panic("Exiting from tracker routine...")
 	})
 }
 
