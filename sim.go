@@ -98,6 +98,12 @@ func (s *SimGo) connectToMsfs(name string) (*sim.EasySimConnect, error) {
 var connectToMsfsInProgress = false
 var lastMessageReceived time.Time
 
+func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, trackID int) {
+	go recoverer(maxTries, trackID, func() {
+		s.Track(name, report)
+	})
+}
+
 func (s *SimGo) Track(name string, report interface{}) error {
 	sc, err := s.connectToMsfs(name)
 	if err != nil {
@@ -109,8 +115,6 @@ func (s *SimGo) Track(name string, report interface{}) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	s.Context = ctx
 
-	defer cancel()
-
 	go func() {
 		for {
 			select {
@@ -120,13 +124,9 @@ func (s *SimGo) Track(name string, report interface{}) error {
 					s.Logger.Info("Last received message was received 5 sec ago. Restart tracking")
 					sc.Close()
 					s.Logger.Info("SC Closed")
-					//sc, err = sim.ConnectToMsfs()
 					connectToMsfsInProgress = true
+					defer cancel()
 					return
-					// if err != nil {
-					// 	globals.Logger.Errorf("Connection to MSFS has been failed. Reason: %s", err.Error())
-					// 	return
-					// }
 				}
 			}
 		}
