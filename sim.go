@@ -146,7 +146,7 @@ func (s *SimGo) Track(name string, report interface{}) error {
 					s.Socket.Broadcast(EventNotification(MSFS_CONNECTION_READY))
 					time.Sleep(20 * time.Second)
 					connectToMsfsInProgress = false
-					s.trackSimVars(sc, report)
+					s.trackSimVars(sc, reflect.ValueOf(report))
 				default:
 					s.Logger.Warningf("Received simVar: %v", state)
 				}
@@ -157,14 +157,14 @@ func (s *SimGo) Track(name string, report interface{}) error {
 	return nil
 }
 
-func (s *SimGo) trackSimVars(sc *sim.EasySimConnect, report interface{}) error {
-	if err := s.ConnectToSimVar(sc, convertToSimSimVar(reflect.ValueOf(report)), report); err != nil {
+func (s *SimGo) trackSimVars(sc *sim.EasySimConnect, report reflect.Value) error {
+	if err := s.ConnectToSimVar(sc, convertToSimSimVar(report), report); err != nil {
 		return errors.New(fmt.Sprintf("failed to connect to SimVar: %v ", err.Error()))
 	}
 	return nil
 }
 
-func (s *SimGo) ConnectToSimVar(sc *sim.EasySimConnect, listSimVar []sim.SimVar, result interface{}) error {
+func (s *SimGo) ConnectToSimVar(sc *sim.EasySimConnect, listSimVar []sim.SimVar, returnType reflect.Value) error {
 	if sc == nil {
 		return errors.New("sim connect is nil")
 	}
@@ -185,7 +185,7 @@ func (s *SimGo) ConnectToSimVar(sc *sim.EasySimConnect, listSimVar []sim.SimVar,
 	for {
 		select {
 		case sv := <-cSimVar:
-			s.TrackEvent <- convertToInterface(reflect.ValueOf(&result), sv)
+			s.TrackEvent <- convertToInterface(returnType, sv)
 		case <-crashed:
 			s.Logger.Error("Your are crashed !!")
 			<-sc.Close() // Wait close confirmation
