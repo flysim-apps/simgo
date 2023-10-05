@@ -185,7 +185,7 @@ func (s *SimGo) ConnectToSimVar(sc *sim.EasySimConnect, listSimVar []sim.SimVar,
 	for {
 		select {
 		case sv := <-cSimVar:
-			s.TrackEvent <- convertToInterface(result, sv)
+			s.TrackEvent <- convertToInterface(&result, sv)
 		case <-crashed:
 			s.Logger.Error("Your are crashed !!")
 			<-sc.Close() // Wait close confirmation
