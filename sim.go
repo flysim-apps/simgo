@@ -16,20 +16,18 @@ import (
 )
 
 type SimGo struct {
-	Error         error
-	State         chan int
-	Connection    <-chan bool
-	TrackEvent    chan interface{}
-	Logger        *logging.Logger
-	Socket        *websockets.Websocket
-	Context       context.Context
-	ContextCancel context.CancelFunc
+	Error      error
+	State      chan int
+	Connection <-chan bool
+	TrackEvent chan interface{}
+	Logger     *logging.Logger
+	Socket     *websockets.Websocket
+	Context    context.Context
 }
 
 // creates new simgo instance
 func NewSimGo(logger *logging.Logger) *SimGo {
-	ctx, cancel := context.WithCancel(context.Background())
-	return &SimGo{State: make(chan int, 1), TrackEvent: make(chan interface{}, 1), Logger: logger, Context: ctx, ContextCancel: cancel}
+	return &SimGo{State: make(chan int, 1), TrackEvent: make(chan interface{}, 1), Logger: logger}
 }
 
 // starts web socket server on given host and port
@@ -108,17 +106,22 @@ func (s *SimGo) Track(name string, report interface{}) error {
 
 	checker := time.NewTicker(30 * time.Second)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	s.Context = ctx
+
+	defer cancel()
+
 	go func() {
 		for {
 			select {
 			case <-checker.C:
 				timeNow := time.Now().Add(-5 * time.Second)
 				if !connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeNow) {
-					s.Logger.Infof("Last received message was received 5 sec ago. Restart tracking")
+					s.Logger.Info("Last received message was received 5 sec ago. Restart tracking")
 					sc.Close()
+					s.Logger.Info("SC Closed")
 					//sc, err = sim.ConnectToMsfs()
 					connectToMsfsInProgress = true
-					s.ContextCancel()
 					return
 					// if err != nil {
 					// 	globals.Logger.Errorf("Connection to MSFS has been failed. Reason: %s", err.Error())
