@@ -99,21 +99,27 @@ var connectToMsfsInProgress = false
 var lastMessageReceived time.Time
 
 func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, trackID int) {
-	recoverer(maxTries, trackID, func() {
-		s.Track(name, report)
+	go recoverer(maxTries, trackID, func() {
+		q, _ := s.Track(name, report)
+
+		<-q
+
+		return
 	})
 }
 
-func (s *SimGo) Track(name string, report interface{}) error {
+func (s *SimGo) Track(name string, report interface{}) (chan bool, error) {
 	sc, err := s.connectToMsfs(name)
 	if err != nil {
-		return errors.New(fmt.Sprintf("connection to MSFS has been failed. Reason: %s", err.Error()))
+		return nil, errors.New(fmt.Sprintf("connection to MSFS has been failed. Reason: %s", err.Error()))
 	}
 
 	checker := time.NewTicker(30 * time.Second)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	s.Context = ctx
+
+	quit := make(chan bool, 1)
 
 	go func() {
 		for {
@@ -129,6 +135,7 @@ func (s *SimGo) Track(name string, report interface{}) error {
 				}
 			case <-s.Context.Done():
 				s.Logger.Warning("Tracking routine will exit")
+				quit <- true
 				return
 			case open := <-s.Connection:
 				s.Logger.Debugf("Open: %b", open)
@@ -149,7 +156,7 @@ func (s *SimGo) Track(name string, report interface{}) error {
 		}
 	}()
 
-	return nil
+	return quit, nil
 }
 
 func (s *SimGo) trackSimVars(sc *sim.EasySimConnect, report reflect.Value) error {
