@@ -9,7 +9,7 @@ import (
 )
 
 func TestConvertToSimSimVar(t *testing.T) {
-	vars := convertToSimSimVar(reflect.ValueOf(Report{}))
+	vars := convertToSimSimVar(reflect.ValueOf(&Report{}))
 	assert.Greater(t, len(vars), 0, "vars is zero")
 }
 

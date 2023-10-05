@@ -197,15 +197,7 @@ func (s *SimGo) ConnectToSimVar(sc *sim.EasySimConnect, listSimVar []sim.SimVar,
 
 func convertToSimSimVar(val reflect.Value) []sim.SimVar {
 	vars := make([]sim.SimVar, 0)
-	if val.Kind() == reflect.Interface && !val.IsNil() {
-		elm := val.Elem()
-		if elm.Kind() == reflect.Ptr && !elm.IsNil() && elm.Elem().Kind() == reflect.Ptr {
-			val = elm
-		}
-	}
-	if val.Kind() == reflect.Ptr {
-		val = val.Elem()
-	}
+	val = val.Elem()
 
 	for i := 0; i < val.Type().NumField(); i++ {
 		nameTag, _ := val.Type().Field(i).Tag.Lookup("name")
@@ -238,15 +230,7 @@ func convertToSimSimVar(val reflect.Value) []sim.SimVar {
 }
 
 func convertToInterface(val reflect.Value, vars []sim.SimVar) interface{} {
-	if val.Kind() == reflect.Interface && !val.IsNil() {
-		elm := val.Elem()
-		if elm.Kind() == reflect.Ptr && !elm.IsNil() && elm.Elem().Kind() == reflect.Ptr {
-			val = elm
-		}
-	}
-	if val.Kind() == reflect.Ptr {
-		val = val.Elem()
-	}
+	val = val.Elem()
 	found := make([]string, 0)
 	for _, simVar := range vars {
 		fmt.Printf("iterateSimVars(): Name: %s                                               Index: %b    Unit: %s\n", simVar.Name, simVar.Index, simVar.Unit)
