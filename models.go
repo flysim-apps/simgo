@@ -3,9 +3,7 @@ package simgo
 import (
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
-	"time"
 
 	sim "github.com/micmonay/simconnect"
 )
@@ -28,58 +26,34 @@ const (
 	STATE_CONNECTION_FAILED = -3
 )
 
-type SimVar struct {
-	Name     string
-	Unit     sim.SimVarUnit
-	UnitStr  string
-	Settable bool
-	Index    int
-	NameJson string
-	Value    interface{}
-}
-
-func (s SimVar) ToSimVar() sim.SimVar {
-	return sim.SimVar{
-		Name:     s.Name,
-		Unit:     sim.SimVarUnit(s.Unit),
-		Settable: s.Settable,
-		Index:    s.Index,
-	}
-}
-
 type Report struct {
-	AltitudeAboveGround float64 `name:"PLANE ALT ABOVE GROUND" unit:"feet"`
-	PlaneAltitude       float64 `name:"PLANE ALTITUDE" unit:"Radians"`
-	Altitude            float64 `name:"INDICATED ALTITUDE" unit:"feet"`
-	RadioHeight         float64 `name:"RADIO HEIGHT" unit:"feet"`
-	Latitude            float64 `name:"PLANE LATITUDE" unit:"degrees"`
-	Longitude           float64 `name:"PLANE LONGITUDE" unit:"degrees"`
-	Heading             float64 `name:"PLANE HEADING DEGREES TRUE" unit:"degrees"`
-	HeadingMagnetic     float64 `name:"PLANE HEADING DEGREES MAGNETIC" unit:"degrees"`
-	Airspeed            float64 `name:"AIRSPEED INDICATED" unit:"knot"`
-	AirspeedTrue        float64 `name:"AIRSPEED TRUE" unit:"knot"`
-	AirspeedMach        float64 `name:"AIRSPEED MACH" unit:"Mach"`
-	VerticalSpeed       float64 `name:"VERTICAL SPEED" unit:"ft/min"`
-	Flaps               float64 `name:"TRAILING EDGE FLAPS LEFT ANGLE" unit:"degrees"`
-	Trim                float64 `name:"ELEVATOR TRIM PCT" unit:"percent"`
-	RudderTrim          float64 `name:"RUDDER TRIM PCT" unit:"percent"`
-	WindDirection       float64 `name:"AMBIENT WIND DIRECTION" unit:"degrees"`
-	WindVelocity        float64 `name:"AMBIENT WIND VELOCITY" unit:"knots"`
-	SurfaceType         float64 `name:"SURFACE TYPE" unit:"Enum"`
-	OnAnyRunway         float64 `name:"ON ANY RUNWAY" unit:"Bool"`
-	GroundVelocity      float64 `name:"GROUND VELOCITY" unit:"knots"`
-
-	TouchdownLat      float64 `name:"PLANE TOUCHDOWN LATITUDE" unit:"radians"`
-	TouchdownLon      float64 `name:"PLANE TOUCHDOWN LONGITUDE" unit:"radians"`
-	TouchdownVelocity float64 `name:"PLANE TOUCHDOWN NORMAL VELOCITY" unit:"Feetpersecond"`
-	TouchdownBank     float64 `name:"PLANE TOUCHDOWN BANK DEGREES" unit:"degrees"`
-	TouchdownPitch    float64 `name:"PLANE TOUCHDOWN PITCH DEGREES" unit:"degrees"`
-
-	VelocityBodyY float64 `name:"VELOCITY BODY Y" unit:"Feetpersecond"`
-	Bank          float64 `name:"PLANE BANK DEGREES" unit:"Radians"`
-}
-
-type Aircraft struct {
+	AltitudeAboveGround   float64 `name:"PLANE ALT ABOVE GROUND" unit:"feet"`
+	PlaneAltitude         float64 `name:"PLANE ALTITUDE" unit:"Radians"`
+	Altitude              float64 `name:"INDICATED ALTITUDE" unit:"feet"`
+	RadioHeight           float64 `name:"RADIO HEIGHT" unit:"feet"`
+	Latitude              float64 `name:"PLANE LATITUDE" unit:"degrees"`
+	Longitude             float64 `name:"PLANE LONGITUDE" unit:"degrees"`
+	Heading               float64 `name:"PLANE HEADING DEGREES TRUE" unit:"degrees"`
+	HeadingMagnetic       float64 `name:"PLANE HEADING DEGREES MAGNETIC" unit:"degrees"`
+	Airspeed              float64 `name:"AIRSPEED INDICATED" unit:"knot"`
+	AirspeedTrue          float64 `name:"AIRSPEED TRUE" unit:"knot"`
+	AirspeedMach          float64 `name:"AIRSPEED MACH" unit:"Mach"`
+	VerticalSpeed         float64 `name:"VERTICAL SPEED" unit:"ft/min"`
+	Flaps                 float64 `name:"TRAILING EDGE FLAPS LEFT ANGLE" unit:"degrees"`
+	Trim                  float64 `name:"ELEVATOR TRIM PCT" unit:"percent"`
+	RudderTrim            float64 `name:"RUDDER TRIM PCT" unit:"percent"`
+	WindDirection         float64 `name:"AMBIENT WIND DIRECTION" unit:"degrees"`
+	WindVelocity          float64 `name:"AMBIENT WIND VELOCITY" unit:"knots"`
+	SurfaceType           float64 `name:"SURFACE TYPE" unit:"Enum"`
+	OnAnyRunway           float64 `name:"ON ANY RUNWAY" unit:"Bool"`
+	GroundVelocity        float64 `name:"GROUND VELOCITY" unit:"knots"`
+	TouchdownLat          float64 `name:"PLANE TOUCHDOWN LATITUDE" unit:"radians"`
+	TouchdownLon          float64 `name:"PLANE TOUCHDOWN LONGITUDE" unit:"radians"`
+	TouchdownVelocity     float64 `name:"PLANE TOUCHDOWN NORMAL VELOCITY" unit:"Feetpersecond"`
+	TouchdownBank         float64 `name:"PLANE TOUCHDOWN BANK DEGREES" unit:"degrees"`
+	TouchdownPitch        float64 `name:"PLANE TOUCHDOWN PITCH DEGREES" unit:"degrees"`
+	VelocityBodyY         float64 `name:"VELOCITY BODY Y" unit:"Feetpersecond"`
+	Bank                  float64 `name:"PLANE BANK DEGREES" unit:"Radians"`
 	Title                 string  `name:"TITLE" unit:"String"`
 	OnGround              float64 `name:"SIM ON GROUND" unit:"Bool"`
 	APUSwitch             float64 `name:"APU SWITCH" unit:"Bool"`
@@ -132,89 +106,16 @@ type Aircraft struct {
 	Engine2TurbN2         float64 `name:"TURB ENG N2:index" index:"2" unit:"percent"`
 	Engine3TurbN2         float64 `name:"TURB ENG N2:index" index:"3" unit:"percent"`
 	Engine4TurbN2         float64 `name:"TURB ENG N2:index" index:"4" unit:"percent"`
-}
-
-type System struct {
-	ZuluTime        float64 `name:"ZULU TIME" unit:"Seconds"`
-	ZuluDayOfWeek   float64 `name:"ZULU DAY OF WEEK" unit:"number"`
-	ZuluDayOfMonth  float64 `name:"ZULU DAY OF MONTH" unit:"number"`
-	ZuluMonthOfYear float64 `name:"ZULU MONTH OF YEAR" unit:"number"`
-	ZuluDayOfYear   float64 `name:"ZULU DAY OF YEAR" unit:"number"`
-	ZuluYear        float64 `name:"ZULU YEAR" unit:"number"`
-}
-
-type LogPosition struct {
-	Altitude         float64 `json:"alt"`
-	Latitude         float64 `json:"lat"`
-	Longitude        float64 `json:"lng"`
-	Heading          float64 `json:"heading"`
-	HeadingMagnetic  float64 `json:"heading_magnetic"`
-	FlightID         string  `json:"flightId"`
-	Airspeed         string  `json:"airspeed"`
-	AirspeedTrue     string  `json:"airspeed_true"`
-	AirspeedMach     string  `json:"airspeed_mach"`
-	GroundVelocity   string  `json:"ground_velocity"`
-	VS               float64 `json:"vs"`
-	WindDirection    float64 `json:"wind_direction"`
-	WindVelocity     float64 `json:"wind_velocity"`
-	TraveledDistance string  `json:"trdis"`
-}
-
-type LogEntry struct {
-	FlightID    string       `json:"flight_id"`
-	PilotID     string       `json:"pilot_id"`
-	Origin      string       `json:"origin"`
-	Destination string       `json:"destination"`
-	Aircraft    string       `json:"aircraft"`
-	Callsign    string       `json:"callsign"`
-	Route       string       `json:"route"`
-	Airline     string       `json:"airline"`
-	Position    *LogPosition `json:"position"`
-	LogDate     time.Time    `json:"log_date"`
+	ZuluTime              float64 `name:"ZULU TIME" unit:"Seconds"`
+	ZuluDayOfWeek         float64 `name:"ZULU DAY OF WEEK" unit:"number"`
+	ZuluDayOfMonth        float64 `name:"ZULU DAY OF MONTH" unit:"number"`
+	ZuluMonthOfYear       float64 `name:"ZULU MONTH OF YEAR" unit:"number"`
+	ZuluDayOfYear         float64 `name:"ZULU DAY OF YEAR" unit:"number"`
+	ZuluYear              float64 `name:"ZULU YEAR" unit:"number"`
 }
 
 type FlightEntry struct {
 	Payload string `json:"payload"`
-}
-
-func ParseReport(vars []sim.SimVar) Report {
-	report := Report{}
-	iterateSimVars(&report, vars)
-	return report
-}
-
-func ParseAircraft(vars []sim.SimVar) Aircraft {
-	aircraft := Aircraft{}
-	iterateSimVars(&aircraft, vars)
-	return aircraft
-}
-
-func ParseSystem(vars []sim.SimVar) System {
-	system := System{}
-	iterateSimVars(&system, vars)
-	return system
-}
-
-func iterateSimVars(a interface{}, vars []sim.SimVar) {
-	v := reflect.ValueOf(a).Elem()
-	found := make([]string, 0)
-	for _, simVar := range vars {
-		//fmt.Printf("iterateSimVars(): Name: %s                                               Index: %b    Unit: %s\n", simVar.Name, simVar.Index, simVar.Unit)
-		for j := 0; j < v.NumField(); j++ {
-			nameTag, _ := v.Type().Field(j).Tag.Lookup("name")
-			indexTag, _ := v.Type().Field(j).Tag.Lookup("index")
-			if indexTag == "" {
-				indexTag = "0"
-			}
-
-			idx, _ := strconv.Atoi(indexTag)
-
-			if simVar.Index == idx && simVar.Name == nameTag {
-				found = append(found, fmt.Sprintf("Name: %s                   Index: %b    Unit: %s\n", simVar.Name, simVar.Index, simVar.Unit))
-				getValue(v.Field(j), simVar)
-			}
-		}
-	}
 }
 
 func getValue(field reflect.Value, simVar sim.SimVar) {

@@ -5,6 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/flysim-apps/simgo/websockets"
@@ -16,7 +19,7 @@ type SimGo struct {
 	Error         error
 	State         chan int
 	Connection    <-chan bool
-	TrackEvent    chan []sim.SimVar
+	TrackEvent    chan interface{}
 	Logger        *logging.Logger
 	Socket        *websockets.Websocket
 	Context       context.Context
@@ -26,7 +29,7 @@ type SimGo struct {
 // creates new simgo instance
 func NewSimGo(logger *logging.Logger) *SimGo {
 	ctx, cancel := context.WithCancel(context.Background())
-	return &SimGo{State: make(chan int, 1), TrackEvent: make(chan []sim.SimVar, 1), Logger: logger, Context: ctx, ContextCancel: cancel}
+	return &SimGo{State: make(chan int, 1), TrackEvent: make(chan interface{}, 1), Logger: logger, Context: ctx, ContextCancel: cancel}
 }
 
 // starts web socket server on given host and port
@@ -96,7 +99,7 @@ func (s *SimGo) connectToMsfs(name string) (*sim.EasySimConnect, error) {
 var connectToMsfsInProgress = false
 var lastMessageReceived time.Time
 
-func (s *SimGo) Track(name string, listSimVar ...SimVar) error {
+func (s *SimGo) Track(name string, report interface{}) error {
 	sc, err := s.connectToMsfs(name)
 	if err != nil {
 		return errors.New(fmt.Sprintf("connection to MSFS has been failed. Reason: %s", err.Error()))
@@ -142,7 +145,7 @@ func (s *SimGo) Track(name string, listSimVar ...SimVar) error {
 					s.Socket.Broadcast(EventNotification(MSFS_CONNECTION_READY))
 					time.Sleep(20 * time.Second)
 					connectToMsfsInProgress = false
-					s.trackSimVars(sc, listSimVar)
+					s.trackSimVars(sc, report)
 				default:
 					s.Logger.Warningf("Received simVar: %v", state)
 				}
@@ -153,14 +156,14 @@ func (s *SimGo) Track(name string, listSimVar ...SimVar) error {
 	return nil
 }
 
-func (s *SimGo) trackSimVars(sc *sim.EasySimConnect, listSimVar []SimVar) error {
-	if err := s.ConnectToSimVar(sc, convertToSimSimVar(listSimVar)); err != nil {
+func (s *SimGo) trackSimVars(sc *sim.EasySimConnect, report interface{}) error {
+	if err := s.ConnectToSimVar(sc, convertToSimSimVar(report), report); err != nil {
 		return errors.New(fmt.Sprintf("failed to connect to SimVar: %v ", err.Error()))
 	}
 	return nil
 }
 
-func (s *SimGo) ConnectToSimVar(sc *sim.EasySimConnect, listSimVar []sim.SimVar) error {
+func (s *SimGo) ConnectToSimVar(sc *sim.EasySimConnect, listSimVar []sim.SimVar, result interface{}) error {
 	if sc == nil {
 		return errors.New("sim connect is nil")
 	}
@@ -180,8 +183,8 @@ func (s *SimGo) ConnectToSimVar(sc *sim.EasySimConnect, listSimVar []sim.SimVar)
 	crashed := sc.ConnectSysEventCrashed()
 	for {
 		select {
-		case result := <-cSimVar:
-			s.TrackEvent <- result
+		case sv := <-cSimVar:
+			s.TrackEvent <- convertToInterface(result, sv)
 		case <-crashed:
 			s.Logger.Error("Your are crashed !!")
 			<-sc.Close() // Wait close confirmation
@@ -191,17 +194,59 @@ func (s *SimGo) ConnectToSimVar(sc *sim.EasySimConnect, listSimVar []sim.SimVar)
 	}
 }
 
-func convertToSimSimVar(listSimVar []SimVar) []sim.SimVar {
+func convertToSimSimVar(a interface{}) []sim.SimVar {
 	vars := make([]sim.SimVar, 0)
+	v := reflect.ValueOf(a).Elem()
 
-	for _, v := range listSimVar {
-		vars = append(vars, sim.SimVar{
-			Index:    v.Index,
-			Name:     v.Name,
-			Unit:     v.Unit,
-			Settable: v.Settable,
-		})
+	for i := 0; i < v.NumField(); i++ {
+		nameTag, _ := v.Type().Field(i).Tag.Lookup("name")
+		indexTag, _ := v.Type().Field(i).Tag.Lookup("index")
+		unitTag, _ := v.Type().Field(i).Tag.Lookup("unit")
+		settableTag, _ := v.Type().Field(i).Tag.Lookup("settable")
+
+		if nameTag == "" || unitTag == "" {
+			continue
+		}
+
+		simv := sim.SimVar{
+			Name: nameTag,
+			Unit: sim.SimVarUnit(unitTag),
+		}
+
+		if indexTag != "" {
+			idx, _ := strconv.Atoi(indexTag)
+			simv.Index = idx
+		}
+
+		if settableTag != "" {
+			simv.Settable = settableTag == "1" || strings.ToLower(settableTag) == "true"
+		}
+
+		vars = append(vars, simv)
 	}
 
 	return vars
+}
+
+func convertToInterface(a interface{}, vars []sim.SimVar) interface{} {
+	v := reflect.ValueOf(a).Elem()
+	found := make([]string, 0)
+	for _, simVar := range vars {
+		//fmt.Printf("iterateSimVars(): Name: %s                                               Index: %b    Unit: %s\n", simVar.Name, simVar.Index, simVar.Unit)
+		for j := 0; j < v.NumField(); j++ {
+			nameTag, _ := v.Type().Field(j).Tag.Lookup("name")
+			indexTag, _ := v.Type().Field(j).Tag.Lookup("index")
+			if indexTag == "" {
+				indexTag = "0"
+			}
+
+			idx, _ := strconv.Atoi(indexTag)
+
+			if simVar.Index == idx && simVar.Name == nameTag {
+				found = append(found, fmt.Sprintf("Name: %s                   Index: %b    Unit: %s\n", simVar.Name, simVar.Index, simVar.Unit))
+				getValue(v.Field(j), simVar)
+			}
+		}
+	}
+	return a
 }

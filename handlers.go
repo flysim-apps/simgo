@@ -10,15 +10,6 @@ func EventNotification(event string) map[string]interface{} {
 	}
 }
 
-func systemNotification(r *System) map[string]interface{} {
-	return map[string]interface{}{
-		"event": SYSTEM_STATE,
-		"data": map[string]interface{}{
-			"zuluTime": r.ZuluTime,
-		},
-	}
-}
-
 func round(num float64) int {
 	return int(num + math.Copysign(0.5, num))
 }
