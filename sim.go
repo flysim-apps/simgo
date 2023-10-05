@@ -99,7 +99,7 @@ var connectToMsfsInProgress = false
 var lastMessageReceived time.Time
 
 func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, trackID int) {
-	go recoverer(maxTries, trackID, func() {
+	recoverer(maxTries, trackID, func() {
 		s.Track(name, report)
 	})
 }
@@ -130,13 +130,6 @@ func (s *SimGo) Track(name string, report interface{}) error {
 			case <-s.Context.Done():
 				s.Logger.Warning("Tracking routine will exit")
 				return
-			}
-		}
-	}()
-
-	go func() {
-		for {
-			select {
 			case open := <-s.Connection:
 				s.Logger.Debugf("Open: %b", open)
 			case state := <-s.State:
