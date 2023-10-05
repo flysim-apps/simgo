@@ -101,10 +101,13 @@ var lastMessageReceived time.Time
 
 func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, trackID int) {
 	go recoverer(maxTries, trackID, func() {
-		checker := time.NewTicker(30 * time.Second)
+		checker := time.NewTicker(15 * time.Second)
+		defer checker.Stop()
 
 		ctx, cancel := context.WithCancel(context.Background())
-		s.Context = ctx
+
+		defer cancel()
+
 		wait := &sync.WaitGroup{}
 		wait.Add(2)
 
@@ -120,6 +123,9 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 
 			for {
 				select {
+				case <-ctx.Done():
+					s.Logger.Warning("Checker routine will exit")
+					return
 				case <-checker.C:
 					timeNow := time.Now().Add(-5 * time.Second)
 					s.Logger.Info("Timeout checker")
