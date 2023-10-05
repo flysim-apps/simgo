@@ -100,9 +100,9 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 		wait := sync.WaitGroup{}
 
 		defer checker.Stop()
-		wait.Add(1)
+		wait.Add(2)
 
-		//go s.track(name, report, ctx, &wait)
+		go s.track(name, report, ctx, &wait)
 
 		go func() {
 			defer wait.Done()
@@ -113,14 +113,12 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 					s.Logger.Warning("Checking routine will exit")
 					return
 				case <-checker.C:
-					//timeNow := time.Now().Add(-5 * time.Second)
+					timeNow := time.Now().Add(-5 * time.Second)
 					s.Logger.Info("Timeout checker")
-					cancel()
-					// if !connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeNow) {
-					// 	s.Logger.Info("Last received message was received 5 sec ago. Cancel tracking")
-					// 	cancel()
-					// 	return
-					// }
+					if !connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeNow) {
+						s.Logger.Info("Last received message was received 5 sec ago. Cancel tracking")
+						cancel()
+					}
 				}
 			}
 		}()
@@ -132,14 +130,11 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 }
 
 func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *sync.WaitGroup) {
-	wg.Add(1)
-
 	sc, err := s.connectToMsfs(name)
 	defer wg.Done()
-	defer fmt.Println(`Exiting `)
 	defer sc.Close()
 	if err != nil {
-		panic(("connection to MSFS has been failed. Reason: %s" + err.Error()))
+		panic("connection to MSFS has been failed. Reason: %s" + err.Error())
 	}
 
 	for {
