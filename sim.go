@@ -94,6 +94,7 @@ var connectToMsfsInProgress = false
 var lastMessageReceived time.Time
 
 func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, trackID int) {
+	time.Sleep(30 * time.Second)
 	go recoverer(maxTries, trackID, func() {
 		checker := time.NewTicker(15 * time.Second)
 		ctx, cancel := context.WithCancel(context.Background())
