@@ -81,7 +81,8 @@ func (s *SimGo) connectToMsfs(name string) (*sim.EasySimConnect, error) {
 					s.Error = err
 					s.State <- STATE_CONNECTION_FAILED
 				}()
-				time.Sleep(10 * time.Second)
+				time.Sleep(30 * time.Second)
+				continue
 			}
 			<-c
 			go func() {
@@ -196,7 +197,7 @@ func (s *SimGo) ConnectToSimVar(sc *sim.EasySimConnect, listSimVar []sim.SimVar,
 
 func convertToSimSimVar(a interface{}) []sim.SimVar {
 	vars := make([]sim.SimVar, 0)
-	v := reflect.ValueOf(a).Elem()
+	v := reflect.ValueOf(a)
 
 	for i := 0; i < v.NumField(); i++ {
 		nameTag, _ := v.Type().Field(i).Tag.Lookup("name")
