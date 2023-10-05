@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/flysim-apps/simgo/websockets"
@@ -104,13 +105,18 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 
 		ctx, cancel := context.WithCancel(context.Background())
 		s.Context = ctx
+		wait := &sync.WaitGroup{}
+		wait.Add(2)
 
-		q, err := s.Track(name, report)
-		if err != nil {
+		if err := s.Track(name, report, wait); err != nil {
 			s.Logger.Errorf("Tracking error: %v", err.Error())
+			wait.Done()
 		}
 
 		go func() {
+			defer wait.Done()
+			defer fmt.Println(`Exiting `)
+
 			for {
 				select {
 				case <-checker.C:
@@ -127,7 +133,7 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 			}
 		}()
 
-		<-q
+		wait.Wait()
 
 		s.Logger.Warning("Exiting from tracker routine...")
 
@@ -135,22 +141,22 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 	})
 }
 
-func (s *SimGo) Track(name string, report interface{}) (<-chan bool, error) {
+func (s *SimGo) Track(name string, report interface{}, wait *sync.WaitGroup) error {
 	sc, err := s.connectToMsfs(name)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("connection to MSFS has been failed. Reason: %s", err.Error()))
+		return errors.New(fmt.Sprintf("connection to MSFS has been failed. Reason: %s", err.Error()))
 	}
 
-	quit := make(chan bool, 1)
-
 	go func() {
+		defer wait.Done()
+		defer fmt.Println(`Exiting Track`)
+		defer sc.Close()
+
 		for {
 			select {
 			case <-s.Context.Done():
 				s.Logger.Warning("Tracking routine will exit")
-				sc.Close()
 				connectToMsfsInProgress = true
-				quit <- true
 				return
 			case open := <-s.Connection:
 				s.Logger.Debugf("Open: %b", open)
@@ -171,7 +177,7 @@ func (s *SimGo) Track(name string, report interface{}) (<-chan bool, error) {
 		}
 	}()
 
-	return quit, nil
+	return nil
 }
 
 func (s *SimGo) trackSimVars(sc *sim.EasySimConnect, report reflect.Value) error {
