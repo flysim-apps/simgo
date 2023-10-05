@@ -36,9 +36,12 @@ func (s *SimGo) Start(httpListen string) error {
 	s.Socket = websockets.New()
 	http.HandleFunc("/socket.io", s.Socket.Serve)
 	s.Logger.Debugf("Socket starting on port %s", httpListen)
-	if err := http.ListenAndServe(httpListen, nil); err != nil {
-		return errors.New(fmt.Sprintf("Server could not be started! Reason: %s", err.Error()))
-	}
+	go func() {
+		if err := http.ListenAndServe(httpListen, nil); err != nil {
+			s.Logger.Errorf("Server could not be started! Reason: %s", err.Error())
+			return
+		}
+	}()
 	return nil
 }
 
@@ -98,19 +101,26 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 
 		defer checker.Stop()
 
-		go s.track(name, report, ctx, &wait)
+		//go s.track(name, report, ctx, &wait)
 
 		go func() {
+			wait.Add(1)
+			defer wait.Done()
+
 			for {
 				select {
+				case <-ctx.Done():
+					s.Logger.Warning("Checking routine will exit")
+					return
 				case <-checker.C:
-					timeNow := time.Now().Add(-5 * time.Second)
+					//timeNow := time.Now().Add(-5 * time.Second)
 					s.Logger.Info("Timeout checker")
-					if !connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeNow) {
-						s.Logger.Info("Last received message was received 5 sec ago. Cancel tracking")
-						cancel()
-						return
-					}
+					cancel()
+					// if !connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeNow) {
+					// 	s.Logger.Info("Last received message was received 5 sec ago. Cancel tracking")
+					// 	cancel()
+					// 	return
+					// }
 				}
 			}
 		}()
