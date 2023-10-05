@@ -51,7 +51,6 @@ type Report struct {
 	TouchdownLon          float64 `name:"PLANE TOUCHDOWN LONGITUDE" unit:"radians"`
 	TouchdownBank         float64 `name:"PLANE TOUCHDOWN BANK DEGREES" unit:"degrees"`
 	TouchdownPitch        float64 `name:"PLANE TOUCHDOWN PITCH DEGREES" unit:"degrees"`
-	VelocityBodyY         float64 `name:"VELOCITY BODY Y" unit:"Feetpersecond"`
 	Bank                  float64 `name:"PLANE BANK DEGREES" unit:"Radians"`
 	Title                 string  `name:"TITLE" unit:"String"`
 	OnGround              float64 `name:"SIM ON GROUND" unit:"Bool"`
