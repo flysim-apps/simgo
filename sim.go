@@ -108,10 +108,11 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 		wait := &sync.WaitGroup{}
 		wait.Add(2)
 
-		if err := s.Track(name, report, wait); err != nil {
-			s.Logger.Errorf("Tracking error: %v", err.Error())
-			wait.Done()
-		}
+		go func() {
+			defer wait.Done()
+			defer fmt.Println(`Exiting Track`)
+			s.Track(name, report)
+		}()
 
 		go func() {
 			defer wait.Done()
@@ -139,43 +140,36 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 	})
 }
 
-func (s *SimGo) Track(name string, report interface{}, wait *sync.WaitGroup) error {
+func (s *SimGo) Track(name string, report interface{}) {
 	sc, err := s.connectToMsfs(name)
+	defer sc.Close()
 	if err != nil {
-		return errors.New(fmt.Sprintf("connection to MSFS has been failed. Reason: %s", err.Error()))
+		panic(("connection to MSFS has been failed. Reason: %s" + err.Error()))
 	}
 
-	go func() {
-		defer wait.Done()
-		defer fmt.Println(`Exiting Track`)
-		defer sc.Close()
-
-		for {
-			select {
-			case <-s.Context.Done():
-				s.Logger.Warning("Tracking routine will exit")
-				connectToMsfsInProgress = true
-				return
-			case open := <-s.Connection:
-				s.Logger.Debugf("Open: %b", open)
-			case state := <-s.State:
-				switch state {
-				case STATE_CONNECTION_FAILED:
-					s.Logger.Debugf("Waiting for MSFS... %v", s.Error)
-				case STATE_CONNECTION_READY:
-					s.Logger.Infof("Connection to MSFS has been established")
-					s.Socket.Broadcast(EventNotification(MSFS_CONNECTION_READY))
-					time.Sleep(20 * time.Second)
-					connectToMsfsInProgress = false
-					s.trackSimVars(sc, reflect.ValueOf(report))
-				default:
-					s.Logger.Warningf("Received simVar: %v", state)
-				}
+	for {
+		select {
+		case <-s.Context.Done():
+			s.Logger.Warning("Tracking routine will exit")
+			connectToMsfsInProgress = true
+			return
+		case open := <-s.Connection:
+			s.Logger.Debugf("Open: %b", open)
+		case state := <-s.State:
+			switch state {
+			case STATE_CONNECTION_FAILED:
+				s.Logger.Debugf("Waiting for MSFS... %v", s.Error)
+			case STATE_CONNECTION_READY:
+				s.Logger.Infof("Connection to MSFS has been established")
+				s.Socket.Broadcast(EventNotification(MSFS_CONNECTION_READY))
+				time.Sleep(20 * time.Second)
+				connectToMsfsInProgress = false
+				s.trackSimVars(sc, reflect.ValueOf(report))
+			default:
+				s.Logger.Warningf("Received simVar: %v", state)
 			}
 		}
-	}()
-
-	return nil
+	}
 }
 
 func (s *SimGo) trackSimVars(sc *sim.EasySimConnect, report reflect.Value) error {
