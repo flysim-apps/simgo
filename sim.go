@@ -226,6 +226,8 @@ func convertToSimSimVar(a interface{}) []sim.SimVar {
 		vars = append(vars, simv)
 	}
 
+	fmt.Printf("SimVars %+v", vars)
+
 	return vars
 }
 
