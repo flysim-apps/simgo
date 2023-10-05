@@ -102,13 +102,9 @@ var lastMessageReceived time.Time
 func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, trackID int) {
 	go recoverer(maxTries, trackID, func() {
 
-		ctx, cancel := context.WithCancel(context.Background())
-
 		wait := sync.WaitGroup{}
 
-		go s.track(name, report, ctx, &wait)
-
-		go s.checker(cancel, &wait)
+		go s.checker(name, report, &wait)
 
 		wait.Wait()
 
@@ -118,14 +114,15 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 	})
 }
 
-func (s *SimGo) checker(cancel context.CancelFunc, wg *sync.WaitGroup) {
+func (s *SimGo) checker(name string, report interface{}, wg *sync.WaitGroup) {
 	checker := time.NewTicker(15 * time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
 	wg.Add(1)
 
 	defer wg.Done()
-	defer fmt.Println(`Exiting `)
 	defer checker.Stop()
-	defer cancel()
+
+	go s.track(name, report, ctx, wg)
 
 	for {
 		select {
@@ -134,6 +131,7 @@ func (s *SimGo) checker(cancel context.CancelFunc, wg *sync.WaitGroup) {
 			s.Logger.Info("Timeout checker")
 			if !connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeNow) {
 				s.Logger.Info("Last received message was received 5 sec ago. Cancel tracking")
+				cancel()
 				return
 			}
 		}
