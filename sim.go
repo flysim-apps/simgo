@@ -226,8 +226,6 @@ func convertToSimSimVar(a interface{}) []sim.SimVar {
 		vars = append(vars, simv)
 	}
 
-	fmt.Printf("SimVars %+v", vars)
-
 	return vars
 }
 
@@ -235,7 +233,7 @@ func convertToInterface(a interface{}, vars []sim.SimVar) interface{} {
 	v := reflect.ValueOf(a).Elem()
 	found := make([]string, 0)
 	for _, simVar := range vars {
-		//fmt.Printf("iterateSimVars(): Name: %s                                               Index: %b    Unit: %s\n", simVar.Name, simVar.Index, simVar.Unit)
+		fmt.Printf("iterateSimVars(): Name: %s                                               Index: %b    Unit: %s\n", simVar.Name, simVar.Index, simVar.Unit)
 		for j := 0; j < v.NumField(); j++ {
 			nameTag, _ := v.Type().Field(j).Tag.Lookup("name")
 			indexTag, _ := v.Type().Field(j).Tag.Lookup("index")
