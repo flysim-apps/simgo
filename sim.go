@@ -70,14 +70,17 @@ func (s *SimGo) connect(name string) (*sim.EasySimConnect, error) {
 
 	<-c // wait connection confirmation
 	fmt.Println("Connect()")
-	connectToMsfsInProgress = false
-	lastMessageReceived = time.Now()
 
 	for {
 		if <-sc.ConnectSysEventSim() {
 			break // wait sim start
 		}
 	}
+
+	fmt.Println("Connected()")
+
+	connectToMsfsInProgress = false
+	lastMessageReceived = time.Now()
 
 	return sc, nil
 }
