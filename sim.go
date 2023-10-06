@@ -152,6 +152,7 @@ func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *
 	for {
 		select {
 		case <-time.After(10 * time.Second):
+			s.Logger.Info("Timer after")
 		case <-ctx.Done():
 			s.Logger.Warning("Tracking routine will exit")
 			return
