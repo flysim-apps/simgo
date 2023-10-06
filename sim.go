@@ -107,6 +107,8 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 
 		wait.Wait()
 
+		s.Logger.Debug(ctx.Err())
+
 		if ctx.Err() != nil && ctx.Err().Error() == "Canceled" {
 			panic("Cancel tracker routine...")
 		}
@@ -244,7 +246,7 @@ func (s *SimGo) recoverer(maxPanics, id int, f func()) {
 			if maxPanics == 0 {
 				panic("SimGo exceeded max tries. Exiting...")
 			} else {
-				if err.(error).Error() != "Cancel tracker routine..." {
+				if err.(string) != "Cancel tracker routine..." {
 					maxPanics -= 1
 					s.Logger.Info("Panic caused by error")
 				}
