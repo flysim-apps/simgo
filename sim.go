@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
+	sim "github.com/flysim-apps/simgo/simconnect"
 	"github.com/flysim-apps/simgo/websockets"
-	sim "github.com/micmonay/simconnect"
 	"github.com/op/go-logging"
 )
 
@@ -148,6 +148,8 @@ func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *
 	}
 
 	crashed := sc.ConnectSysEventCrashed()
+	paused := sc.ConnectSysEventPause()
+	airloaded := sc.ConnectSysEventAircraftLoaded()
 
 	for {
 		select {
@@ -159,6 +161,10 @@ func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *
 		case sv := <-cSimVar:
 			lastMessageReceived = time.Now()
 			s.TrackEvent <- convertToInterface(reflect.ValueOf(report), sv)
+		case r := <-paused:
+			s.Logger.Debugf("Sim is paused: %v", r)
+		case r := <-airloaded:
+			s.Logger.Debugf("Aircraft: %v", r)
 		case <-crashed:
 			s.Logger.Error("Your are crashed !!")
 			<-sc.Close() // Wait close confirmation

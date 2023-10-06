@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/micmonay/simconnect"
+	"github.com/flysim-apps/simgo/simconnect"
 	"github.com/stretchr/testify/assert"
 )
 

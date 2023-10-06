@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"strings"
 
-	sim "github.com/micmonay/simconnect"
+	sim "github.com/flysim-apps/simgo/simconnect"
 )
 
 const (
