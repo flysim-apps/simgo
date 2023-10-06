@@ -183,14 +183,14 @@ func (esc *EasySimConnect) runDispatch() {
 			}
 			go func() {
 				time.Sleep(esc.delay)
-				err, _ := esc.sc.RequestDataOnSimObjectType(uint32(0), recv.dwDefineID, uint32(0), uint32(0))
-				esc.logf(LogError, "Err: %+v", err)
+				esc.sc.RequestDataOnSimObjectType(uint32(0), recv.dwDefineID, uint32(0), uint32(0))
 			}()
 
 		default:
 			esc.logf(LogInfo, "%#v\n", recvInfo)
 		}
 	}
+	esc.logf(LogInfo, "IsAlive %#v\n", esc.alive)
 	esc.sc.Close()
 	esc.logf(LogInfo, "IsAlive %#v\n", esc.alive)
 	esc.cOpen <- false

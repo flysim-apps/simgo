@@ -60,6 +60,9 @@ func (s *SimGo) connect(name string) (*sim.EasySimConnect, error) {
 	sc.SetDelay(1 * time.Second)
 	sc.SetLoggerLevel(sim.LogInfo)
 
+	fmt.Println("NewEasySimConnect()")
+	time.Sleep(5 * time.Second)
+
 	lastMessageReceived = time.Now()
 
 	c, err := sc.Connect(name)
@@ -68,7 +71,7 @@ func (s *SimGo) connect(name string) (*sim.EasySimConnect, error) {
 	}
 
 	<-c // wait connection confirmation
-
+	fmt.Println("Connect()")
 	connectToMsfsInProgress = false
 	lastMessageReceived = time.Now()
 
