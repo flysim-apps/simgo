@@ -60,8 +60,7 @@ func (s *SimGo) connect(ctx context.Context, name string) (*sim.EasySimConnect, 
 	sc.SetDelay(1 * time.Second)
 	sc.SetLoggerLevel(sim.LogInfo)
 
-	fmt.Println("NewEasySimConnect()")
-	time.Sleep(5 * time.Second)
+	//time.Sleep(5 * time.Second)
 
 	c, err := sc.Connect(name)
 	if err != nil {
@@ -69,7 +68,8 @@ func (s *SimGo) connect(ctx context.Context, name string) (*sim.EasySimConnect, 
 	}
 
 	<-c // wait connection confirmation
-	fmt.Println("Connect()")
+
+	s.Logger.Info("Still working on connection to MSFS...")
 
 	for {
 		if <-sc.ConnectSysEventSim() {
@@ -77,7 +77,7 @@ func (s *SimGo) connect(ctx context.Context, name string) (*sim.EasySimConnect, 
 		}
 	}
 
-	fmt.Println("Connected()")
+	s.Logger.Info("Connected to MSFS!")
 
 	connectToMsfsInProgress = false
 	lastMessageReceived = time.Now()
@@ -107,9 +107,9 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 					s.Logger.Warning("Checking routine will exit")
 					return
 				case <-checker.C:
-					timeOut5s := time.Now().Add(-5 * time.Second)
+					timeOut5s := time.Now().Add(-10 * time.Second)
 					timeOut15s := time.Now().Add(-15 * time.Second)
-					s.Logger.Infof("Timeout checker: %v %v", connectToMsfsInProgress, lastMessageReceived)
+					//s.Logger.Infof("Timeout checker: %v %v", connectToMsfsInProgress, lastMessageReceived)
 					if connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeOut15s) {
 						panic("Connection was not confirmed for 15s. Cancel tracking")
 					}

@@ -108,7 +108,6 @@ func (esc *EasySimConnect) logf(level EasySimConnectLogLevel, format string, arg
 
 func (esc *EasySimConnect) runDispatch() {
 	for esc.alive {
-		esc.logf(LogInfo, "esc.alive %#v\n", esc.alive)
 		if esc.ctx.Err() != nil {
 			esc.logf(LogWarn, "Context error, quit")
 			esc.sc.Close()
@@ -135,7 +134,6 @@ func (esc *EasySimConnect) runDispatch() {
 			esc.logf(LogInfo, "Connected to %s", convStrToGoString(recv.szApplicationName[:]))
 			esc.cOpen <- true
 		case SIMCONNECT_RECV_ID_EVENT:
-			esc.logf(LogInfo, "Received SIMCONNECT_RECV_ID_EVENT")
 			recv := *(*SIMCONNECT_RECV_EVENT)(ppdata)
 			cb, found := esc.listEvent[recv.uEventID]
 			if !found {
@@ -144,7 +142,6 @@ func (esc *EasySimConnect) runDispatch() {
 			}
 			cb(recv)
 		case SIMCONNECT_RECV_ID_QUIT:
-			esc.logf(LogInfo, "Received SIMCONNECT_RECV_ID_QUIT")
 			esc.sc.Close()
 			esc.cOpen <- false
 			return
@@ -152,18 +149,13 @@ func (esc *EasySimConnect) runDispatch() {
 			recv := *(*SIMCONNECT_RECV_EVENT_FILENAME)(ppdata)
 			esc.listEvent[recv.uEventID](recv)
 		case SIMCONNECT_RECV_ID_EXCEPTION:
-			esc.logf(LogInfo, "Received SIMCONNECT_RECV_ID_EXCEPTION")
 			recv := (*SIMCONNECT_RECV_EXCEPTION)(ppdata)
 			select {
 			case esc.cException <- recv:
 			case <-time.After(100 * time.Millisecond):
 			}
 			esc.logf(LogInfo, "SimConnect Exception : %s %#v\n", getTextException(recv.dwException), *recv)
-			esc.sc.Close()
-			esc.cOpen <- false
-			return
 		case SIMCONNECT_RECV_ID_SIMOBJECT_DATA, SIMCONNECT_RECV_ID_SIMOBJECT_DATA_BYTYPE:
-			esc.logf(LogInfo, "Received SIMCONNECT_RECV_ID_SIMOBJECT_DATA, SIMCONNECT_RECV_ID_SIMOBJECT_DATA_BYTYPE")
 			recv := *(*SIMCONNECT_RECV_SIMOBJECT_DATA)(ppdata)
 			if len(esc.listSimVar) < int(recv.dwDefineID) {
 				esc.logf(LogWarn, "ListSimVar not found: %#v\n %#v\n %d>=%d", recv, esc.listSimVar, len(esc.listSimVar), int(recv.dwDefineID))
@@ -199,9 +191,7 @@ func (esc *EasySimConnect) runDispatch() {
 			esc.logf(LogInfo, "%#v\n", recvInfo)
 		}
 	}
-	esc.logf(LogInfo, "IsAlive %#v\n", esc.alive)
 	esc.sc.Close()
-	esc.logf(LogInfo, "IsAlive %#v\n", esc.alive)
 	esc.cOpen <- false
 }
 
