@@ -30,13 +30,25 @@ func main() {
 
     sim.TrackWithRecover("simgo", sim.Report{}, 5, 1)
 
-}
+    ...
 ```
 
 You will set connection to Microsoft Flight Simulator 2020 and get notifications like this:
 
 ```
-
+    ...
+    go func() {
+        for {
+            select {
+            case result := <-sim.TrackEvent:
+                report := result.(simgo.Report)
+                ...
+                // do your stuff here
+                ...
+            }
+        }
+    }()
+}    
 ```
 
 
