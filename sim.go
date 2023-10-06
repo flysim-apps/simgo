@@ -26,6 +26,7 @@ type SimGo struct {
 	Context    context.Context
 }
 
+var maxTriesInitial int
 var connectToMsfsInProgress = false
 var lastMessageReceived time.Time
 
@@ -66,6 +67,8 @@ func (s *SimGo) connect(name string) (*sim.EasySimConnect, error) {
 
 	<-c // wait connection confirmation
 
+	lastMessageReceived = time.Now()
+
 	for {
 		if <-sc.ConnectSysEventSim() {
 			break // wait sim start
@@ -76,6 +79,8 @@ func (s *SimGo) connect(name string) (*sim.EasySimConnect, error) {
 }
 
 func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, trackID int) {
+	maxTriesInitial = maxTries
+
 	go s.recoverer(maxTries, trackID, func() {
 		checker := time.NewTicker(15 * time.Second)
 		ctx, cancel := context.WithCancel(context.Background())
@@ -109,8 +114,8 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 
 		s.Logger.Debug(ctx.Err())
 
-		if ctx.Err() != nil && ctx.Err().Error() == "Canceled" {
-			panic("Cancel tracker routine...")
+		if ctx.Err() != nil {
+			panic(ctx.Err().Error())
 		}
 
 		panic("Exiting from tracker routine...")
@@ -246,9 +251,11 @@ func (s *SimGo) recoverer(maxPanics, id int, f func()) {
 			if maxPanics == 0 {
 				panic("SimGo exceeded max tries. Exiting...")
 			} else {
-				if err.(string) != "Cancel tracker routine..." {
+				if err.(string) != "context canceled" {
 					maxPanics -= 1
 					s.Logger.Info("Panic caused by error")
+				} else {
+					maxPanics = maxTriesInitial
 				}
 				go s.recoverer(maxPanics, id, f)
 			}
