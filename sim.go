@@ -69,6 +69,7 @@ func (s *SimGo) connect(name string) (*sim.EasySimConnect, error) {
 
 	<-c // wait connection confirmation
 
+	connectToMsfsInProgress = false
 	lastMessageReceived = time.Now()
 
 	for {
@@ -145,11 +146,9 @@ func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *
 		select {
 		case <-ctx.Done():
 			s.Logger.Warning("Tracking routine will exit")
-			connectToMsfsInProgress = true
 			return
 		case sv := <-cSimVar:
 			lastMessageReceived = time.Now()
-			connectToMsfsInProgress = false
 			s.TrackEvent <- convertToInterface(reflect.ValueOf(report), sv)
 		case <-crashed:
 			s.Logger.Error("Your are crashed !!")
