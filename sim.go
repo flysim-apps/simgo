@@ -129,6 +129,7 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *sync.WaitGroup) {
 	sc, err := s.connect(name)
 	defer wg.Done()
+	defer sc.Close()
 
 	if err != nil {
 		panic("connection to MSFS has been failed. Reason: %s" + err.Error())
@@ -143,9 +144,9 @@ func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *
 
 	for {
 		select {
+		case <-time.After(10 * time.Second):
 		case <-ctx.Done():
 			s.Logger.Warning("Tracking routine will exit")
-			<-sc.Close() // Wait close confirmation
 			return
 		case sv := <-cSimVar:
 			lastMessageReceived = time.Now()
