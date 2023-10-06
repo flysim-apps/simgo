@@ -76,7 +76,7 @@ func (s *SimGo) connect(name string) (*sim.EasySimConnect, error) {
 }
 
 func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, trackID int) {
-	go recoverer(maxTries, trackID, func() {
+	go s.recoverer(maxTries, trackID, func() {
 		checker := time.NewTicker(15 * time.Second)
 		ctx, cancel := context.WithCancel(context.Background())
 		wait := sync.WaitGroup{}
@@ -106,6 +106,10 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 		}()
 
 		wait.Wait()
+
+		if ctx.Err() != nil && ctx.Err().Error() == "Canceled" {
+			panic("Cancel tracker routine...")
+		}
 
 		panic("Exiting from tracker routine...")
 	})
@@ -231,4 +235,22 @@ func convertToInterface(val reflect.Value, vars []sim.SimVar) interface{} {
 		}
 	}
 	return r.Interface()
+}
+
+func (s *SimGo) recoverer(maxPanics, id int, f func()) {
+	defer func() {
+		if err := recover(); err != nil {
+			s.Logger.Error(err)
+			if maxPanics == 0 {
+				panic("SimGo exceeded max tries. Exiting...")
+			} else {
+				if err.(error).Error() != "Cancel tracker routine..." {
+					maxPanics -= 1
+					s.Logger.Info("Panic caused by error")
+				}
+				go s.recoverer(maxPanics, id, f)
+			}
+		}
+	}()
+	f()
 }
