@@ -31,7 +31,7 @@ type Report struct {
 	Airspeed              float64 `name:"AIRSPEED INDICATED" unit:"knot"`
 	AirspeedTrue          float64 `name:"AIRSPEED TRUE" unit:"knot"`
 	AirspeedMach          float64 `name:"AIRSPEED MACH" unit:"Mach"`
-	VerticalSpeed         float64 `name:"VERTICAL SPEED" unit:"ft/min"`
+	VerticalSpeed         float64 `name:"VERTICAL SPEED" unit:"Feetpersecond"`
 	Flaps                 float64 `name:"TRAILING EDGE FLAPS LEFT ANGLE" unit:"degrees"`
 	Trim                  float64 `name:"ELEVATOR TRIM PCT" unit:"percent"`
 	RudderTrim            float64 `name:"RUDDER TRIM PCT" unit:"percent"`
