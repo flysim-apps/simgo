@@ -63,8 +63,6 @@ func (s *SimGo) connect(name string) (*sim.EasySimConnect, error) {
 	fmt.Println("NewEasySimConnect()")
 	time.Sleep(5 * time.Second)
 
-	lastMessageReceived = time.Now()
-
 	c, err := sc.Connect(name)
 	if err != nil {
 		return nil, err
