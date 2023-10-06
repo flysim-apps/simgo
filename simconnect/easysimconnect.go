@@ -1,6 +1,7 @@
 package simconnect
 
 import (
+	"context"
 	"fmt"
 	"time"
 	"unsafe"
@@ -33,10 +34,11 @@ type EasySimConnect struct {
 	cOpen        chan bool
 	alive        bool
 	cException   chan *SIMCONNECT_RECV_EXCEPTION
+	ctx          context.Context
 }
 
 // NewEasySimConnect create instance of EasySimConnect
-func NewEasySimConnect() (*EasySimConnect, error) {
+func NewEasySimConnect(ctx context.Context) (*EasySimConnect, error) {
 	sc, err := NewSimConnect()
 	if err != nil {
 		return nil, err
@@ -54,6 +56,7 @@ func NewEasySimConnect() (*EasySimConnect, error) {
 		make(chan bool, 1),
 		true,
 		make(chan *SIMCONNECT_RECV_EXCEPTION),
+		ctx,
 	}, nil
 }
 
@@ -106,6 +109,12 @@ func (esc *EasySimConnect) logf(level EasySimConnectLogLevel, format string, arg
 func (esc *EasySimConnect) runDispatch() {
 	for esc.alive {
 		esc.logf(LogInfo, "esc.alive %#v\n", esc.alive)
+		if esc.ctx.Err() != nil {
+			esc.logf(LogWarn, "Context error, quit")
+			esc.sc.Close()
+			esc.cOpen <- false
+			return
+		}
 		var ppdata unsafe.Pointer
 		var pcbData uint32
 		err, _ := esc.sc.GetNextDispatch(&ppdata, &pcbData)

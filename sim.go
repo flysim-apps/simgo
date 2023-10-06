@@ -50,9 +50,9 @@ func (s *SimGo) StartWebSocket(httpListen string) error {
 }
 
 // connects to MSFS
-func (s *SimGo) connect(name string) (*sim.EasySimConnect, error) {
+func (s *SimGo) connect(ctx context.Context, name string) (*sim.EasySimConnect, error) {
 	s.Logger.Info("Connecting to MSFS...")
-	sc, err := sim.NewEasySimConnect()
+	sc, err := sim.NewEasySimConnect(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 }
 
 func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *sync.WaitGroup) {
-	sc, err := s.connect(name)
+	sc, err := s.connect(ctx, name)
 	defer wg.Done()
 	defer sc.Close()
 
