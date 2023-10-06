@@ -126,6 +126,7 @@ func (esc *EasySimConnect) runDispatch() {
 			esc.logf(LogInfo, "Connected to %s", convStrToGoString(recv.szApplicationName[:]))
 			esc.cOpen <- true
 		case SIMCONNECT_RECV_ID_EVENT:
+			esc.logf(LogInfo, "Received SIMCONNECT_RECV_ID_EVENT")
 			recv := *(*SIMCONNECT_RECV_EVENT)(ppdata)
 			cb, found := esc.listEvent[recv.uEventID]
 			if !found {
@@ -134,6 +135,7 @@ func (esc *EasySimConnect) runDispatch() {
 			}
 			cb(recv)
 		case SIMCONNECT_RECV_ID_QUIT:
+			esc.logf(LogInfo, "Received SIMCONNECT_RECV_ID_QUIT")
 			esc.sc.Close()
 			esc.cOpen <- false
 			return
@@ -141,6 +143,7 @@ func (esc *EasySimConnect) runDispatch() {
 			recv := *(*SIMCONNECT_RECV_EVENT_FILENAME)(ppdata)
 			esc.listEvent[recv.uEventID](recv)
 		case SIMCONNECT_RECV_ID_EXCEPTION:
+			esc.logf(LogInfo, "Received SIMCONNECT_RECV_ID_EXCEPTION")
 			recv := (*SIMCONNECT_RECV_EXCEPTION)(ppdata)
 			select {
 			case esc.cException <- recv:
@@ -151,6 +154,7 @@ func (esc *EasySimConnect) runDispatch() {
 			esc.cOpen <- false
 			return
 		case SIMCONNECT_RECV_ID_SIMOBJECT_DATA, SIMCONNECT_RECV_ID_SIMOBJECT_DATA_BYTYPE:
+			esc.logf(LogInfo, "Received SIMCONNECT_RECV_ID_SIMOBJECT_DATA, SIMCONNECT_RECV_ID_SIMOBJECT_DATA_BYTYPE")
 			recv := *(*SIMCONNECT_RECV_SIMOBJECT_DATA)(ppdata)
 			if len(esc.listSimVar) < int(recv.dwDefineID) {
 				esc.logf(LogWarn, "ListSimVar not found: %#v\n %#v\n %d>=%d", recv, esc.listSimVar, len(esc.listSimVar), int(recv.dwDefineID))
@@ -179,7 +183,8 @@ func (esc *EasySimConnect) runDispatch() {
 			}
 			go func() {
 				time.Sleep(esc.delay)
-				esc.sc.RequestDataOnSimObjectType(uint32(0), recv.dwDefineID, uint32(0), uint32(0))
+				err, _ := esc.sc.RequestDataOnSimObjectType(uint32(0), recv.dwDefineID, uint32(0), uint32(0))
+				esc.logf(LogError, "Err: %+v", err)
 			}()
 
 		default:
