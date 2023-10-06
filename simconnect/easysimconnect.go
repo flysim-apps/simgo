@@ -105,6 +105,7 @@ func (esc *EasySimConnect) logf(level EasySimConnectLogLevel, format string, arg
 
 func (esc *EasySimConnect) runDispatch() {
 	for esc.alive {
+		esc.logf(LogInfo, "esc.alive %#v\n", esc.alive)
 		var ppdata unsafe.Pointer
 		var pcbData uint32
 		err, _ := esc.sc.GetNextDispatch(&ppdata, &pcbData)
@@ -146,6 +147,9 @@ func (esc *EasySimConnect) runDispatch() {
 			case <-time.After(100 * time.Millisecond):
 			}
 			esc.logf(LogInfo, "SimConnect Exception : %s %#v\n", getTextException(recv.dwException), *recv)
+			esc.sc.Close()
+			esc.cOpen <- false
+			return
 		case SIMCONNECT_RECV_ID_SIMOBJECT_DATA, SIMCONNECT_RECV_ID_SIMOBJECT_DATA_BYTYPE:
 			recv := *(*SIMCONNECT_RECV_SIMOBJECT_DATA)(ppdata)
 			if len(esc.listSimVar) < int(recv.dwDefineID) {
@@ -183,6 +187,7 @@ func (esc *EasySimConnect) runDispatch() {
 		}
 	}
 	esc.sc.Close()
+	esc.logf(LogInfo, "IsAlive %#v\n", esc.alive)
 	esc.cOpen <- false
 }
 
