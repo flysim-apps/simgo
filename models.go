@@ -18,18 +18,10 @@ const (
 	FAILURE_REPORT        = "passcargo_failures"
 )
 
-const (
-	STATE_OK                = 0
-	STATE_CONNECTION_READY  = 1
-	STATE_FATAL             = -1
-	STATE_CONNECTION_ERROR  = -2
-	STATE_CONNECTION_FAILED = -3
-)
-
 type Report struct {
 	fieldAddress          uintptr
 	AltitudeAboveGround   float64 `name:"PLANE ALT ABOVE GROUND" unit:"feet"`
-	PlaneAltitude         float64 `name:"PLANE ALTITUDE" unit:"Radians"`
+	PlaneAltitude         float64 `name:"PLANE ALTITUDE" unit:"feet"`
 	Altitude              float64 `name:"INDICATED ALTITUDE" unit:"feet"`
 	RadioHeight           float64 `name:"RADIO HEIGHT" unit:"feet"`
 	Latitude              float64 `name:"PLANE LATITUDE" unit:"degrees"`
@@ -48,11 +40,11 @@ type Report struct {
 	SurfaceType           float64 `name:"SURFACE TYPE" unit:"Enum"`
 	OnAnyRunway           float64 `name:"ON ANY RUNWAY" unit:"Bool"`
 	GroundVelocity        float64 `name:"GROUND VELOCITY" unit:"knots"`
-	TouchdownLat          float64 `name:"PLANE TOUCHDOWN LATITUDE" unit:"radians"`
-	TouchdownLon          float64 `name:"PLANE TOUCHDOWN LONGITUDE" unit:"radians"`
+	TouchdownLat          float64 `name:"PLANE TOUCHDOWN LATITUDE" unit:"degrees"`
+	TouchdownLon          float64 `name:"PLANE TOUCHDOWN LONGITUDE" unit:"degrees"`
 	TouchdownBank         float64 `name:"PLANE TOUCHDOWN BANK DEGREES" unit:"degrees"`
 	TouchdownPitch        float64 `name:"PLANE TOUCHDOWN PITCH DEGREES" unit:"degrees"`
-	Bank                  float64 `name:"PLANE BANK DEGREES" unit:"Radians"`
+	Bank                  float64 `name:"PLANE BANK DEGREES" unit:"degrees"`
 	Title                 string  `name:"TITLE" unit:"String"`
 	OnGround              float64 `name:"SIM ON GROUND" unit:"Bool"`
 	APUSwitch             float64 `name:"APU SWITCH" unit:"Bool"`
