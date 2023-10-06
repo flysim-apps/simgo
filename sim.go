@@ -26,13 +26,16 @@ type SimGo struct {
 	Context    context.Context
 }
 
+var connectToMsfsInProgress = false
+var lastMessageReceived time.Time
+
 // creates new simgo instance
 func NewSimGo(logger *logging.Logger) *SimGo {
 	return &SimGo{State: make(chan int, 1), TrackEvent: make(chan interface{}, 1), Logger: logger}
 }
 
 // starts web socket server on given host and port
-func (s *SimGo) Start(httpListen string) error {
+func (s *SimGo) StartWebSocket(httpListen string) error {
 	s.Socket = websockets.New()
 	http.HandleFunc("/socket.io", s.Socket.Serve)
 	s.Logger.Debugf("Socket starting on port %s", httpListen)
@@ -46,52 +49,31 @@ func (s *SimGo) Start(httpListen string) error {
 }
 
 // connects to MSFS
-func (s *SimGo) connectToMsfs(name string) (*sim.EasySimConnect, error) {
-	// dllPath := filepath.Join(filepath.Dir(exePath), "SimConnect.dll")
-	// if _, err = os.Stat(dllPath); os.IsNotExist(err) {
-	// 	buf := MustAsset("../simgo/SimConnect.dll")
-
-	// 	if err := ioutil.WriteFile(dllPath, buf, 0644); err != nil {
-	// 		return nil, err
-	// 	}
-	// }
+func (s *SimGo) connect(name string) (*sim.EasySimConnect, error) {
 	s.Logger.Info("Connecting to MSFS...")
 	sc, err := sim.NewEasySimConnect()
 	if err != nil {
-		s.Logger.Errorf("Failed to NewEasySimConnect: %v", err.Error())
 		return nil, err
 	}
 
 	sc.SetDelay(1 * time.Second)
 	sc.SetLoggerLevel(sim.LogInfo)
 
-	go func() {
-		for {
-			c, err := sc.Connect(name)
-			if err != nil {
-				go func() {
-					s.Error = err
-					s.State <- STATE_CONNECTION_FAILED
-				}()
-				time.Sleep(30 * time.Second)
-				continue
-			}
-			<-c
-			go func() {
-				s.Connection = c
-				s.Error = nil
-				s.State <- STATE_CONNECTION_READY
-				return
-			}()
-			return
+	c, err := sc.Connect(name)
+	if err != nil {
+		return nil, err
+	}
+
+	<-c // wait connection confirmation
+
+	for {
+		if <-sc.ConnectSysEventSim() {
+			break // wait sim start
 		}
-	}()
+	}
 
 	return sc, nil
 }
-
-var connectToMsfsInProgress = false
-var lastMessageReceived time.Time
 
 func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, trackID int) {
 	go recoverer(maxTries, trackID, func() {
@@ -130,35 +112,35 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 }
 
 func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *sync.WaitGroup) {
-	sc, err := s.connectToMsfs(name)
+	sc, err := s.connect(name)
 	defer wg.Done()
 	defer sc.Close()
+
 	if err != nil {
 		panic("connection to MSFS has been failed. Reason: %s" + err.Error())
 	}
 
+	cSimVar, err := sc.ConnectToSimVar(convertToSimSimVar(reflect.ValueOf(report))...)
+	if err != nil {
+		panic("connection to MSFS has been failed. Reason: %s" + err.Error())
+	}
+
+	crashed := sc.ConnectSysEventCrashed()
+
 	for {
-		fmt.Println("track routine")
 		select {
 		case <-ctx.Done():
 			s.Logger.Warning("Tracking routine will exit")
 			connectToMsfsInProgress = true
 			return
-		case open := <-s.Connection:
-			s.Logger.Debugf("Open: %b", open)
-		case state := <-s.State:
-			switch state {
-			case STATE_CONNECTION_FAILED:
-				s.Logger.Debugf("Waiting for MSFS... %v", s.Error)
-			case STATE_CONNECTION_READY:
-				s.Logger.Infof("Connection to MSFS has been established")
-				s.Socket.Broadcast(EventNotification(MSFS_CONNECTION_READY))
-				time.Sleep(20 * time.Second)
-				connectToMsfsInProgress = false
-				s.trackSimVars(sc, reflect.ValueOf(report))
-			default:
-				s.Logger.Warningf("Received simVar: %v", state)
-			}
+		case sv := <-cSimVar:
+			lastMessageReceived = time.Now()
+			connectToMsfsInProgress = false
+			s.TrackEvent <- convertToInterface(reflect.ValueOf(report), sv)
+		case <-crashed:
+			s.Logger.Error("Your are crashed !!")
+			<-sc.Close() // Wait close confirmation
+			return
 		}
 	}
 }
@@ -174,17 +156,10 @@ func (s *SimGo) ConnectToSimVar(sc *sim.EasySimConnect, listSimVar []sim.SimVar,
 	if sc == nil {
 		return errors.New("sim connect is nil")
 	}
+
 	cSimVar, err := sc.ConnectToSimVar(listSimVar...)
 	if err != nil {
 		return err
-	}
-
-	cSimStatus := sc.ConnectSysEventSim()
-	//wait sim start
-	for {
-		if <-cSimStatus {
-			break
-		}
 	}
 
 	crashed := sc.ConnectSysEventCrashed()
