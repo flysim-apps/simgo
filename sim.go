@@ -60,6 +60,8 @@ func (s *SimGo) connect(name string) (*sim.EasySimConnect, error) {
 	sc.SetDelay(1 * time.Second)
 	sc.SetLoggerLevel(sim.LogInfo)
 
+	lastMessageReceived = time.Now()
+
 	c, err := sc.Connect(name)
 	if err != nil {
 		return nil, err
