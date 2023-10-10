@@ -24,11 +24,11 @@ func main() {
     
     sim := simgo.NewSimGo(logging.MustGetLogger("simgo"))
     
-    if err := Sim.StartWebSocket(":4050"); err != nil {
-		panic(err.Error())
-	}
+    if err := sim.StartWebSocket(":4050"); err != nil {
+       panic(err.Error())
+    }
 
-    sim.TrackWithRecover("simgo", sim.Report{}, 5, 1)
+    sim.TrackWithRecover("simgo", simgo.Report{}, 5, 1)
 
     ...
 ```
