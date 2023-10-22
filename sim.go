@@ -107,11 +107,11 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 					s.Logger.Warning("Checking routine will exit")
 					return
 				case <-checker.C:
-					timeOut5s := time.Now().Add(-10 * time.Second)
-					timeOut15s := time.Now().Add(-15 * time.Second)
+					timeOut5s := time.Now().Add(-5 * time.Second)
+					timeOut15s := time.Now().Add(-30 * time.Second)
 					//s.Logger.Infof("Timeout checker: %v %v", connectToMsfsInProgress, lastMessageReceived)
 					if connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeOut15s) {
-						panic("Connection was not confirmed for 15s. Cancel tracking")
+						panic("Connection was not confirmed for 30s. Cancel tracking")
 					}
 					if !connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeOut5s) {
 						s.Logger.Info("Last received message was received 5 sec ago. Cancel tracking")

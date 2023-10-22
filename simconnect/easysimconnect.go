@@ -110,9 +110,11 @@ func (esc *EasySimConnect) runDispatch() {
 	for esc.alive {
 		if esc.ctx.Err() != nil {
 			esc.logf(LogWarn, "Context error, quit")
-			esc.sc.Close()
-			esc.cOpen <- false
-			return
+			defer esc.sc.Close()
+			defer func() {
+				esc.cOpen <- false
+			}()
+			panic("context canceled")
 		}
 		var ppdata unsafe.Pointer
 		var pcbData uint32
