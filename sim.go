@@ -29,6 +29,7 @@ type SimGo struct {
 var maxTriesInitial int
 var connectToMsfsInProgress = false
 var lastMessageReceived time.Time
+var simPaused = false
 
 // creates new simgo instance
 func NewSimGo(logger *logging.Logger) *SimGo {
@@ -107,6 +108,9 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 					s.Logger.Warning("Checking routine will exit")
 					return
 				case <-checker.C:
+					if simPaused {
+						continue
+					}
 					timeOut5s := time.Now().Add(-5 * time.Second)
 					timeOutConnection := time.Now().Add(-5 * time.Minute)
 					//s.Logger.Infof("Timeout checker: %v %v", connectToMsfsInProgress, lastMessageReceived)
@@ -165,6 +169,7 @@ func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *
 			s.TrackEvent <- convertToInterface(reflect.ValueOf(report), sv)
 		case r := <-paused:
 			s.Logger.Debugf("Sim is paused: %v", r)
+			simPaused = r
 		case r := <-airloaded:
 			s.Logger.Debugf("Aircraft: %v", r)
 		case <-crashed:
