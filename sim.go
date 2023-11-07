@@ -141,12 +141,14 @@ func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *
 	defer sc.Close()
 
 	if err != nil {
-		panic("connection to MSFS has been failed. Reason: %s" + err.Error())
+		s.Logger.Errorf("connection to MSFS has been failed. Reason: %s", err.Error())
+		return
 	}
 
 	cSimVar, err := sc.ConnectToSimVar(convertToSimSimVar(reflect.ValueOf(report))...)
 	if err != nil {
-		panic("connection to MSFS has been failed. Reason: %s" + err.Error())
+		s.Logger.Errorf("ConnectToSimVar(): connection to MSFS has been failed. Reason: %s", err.Error())
+		return
 	}
 
 	crashed := sc.ConnectSysEventCrashed()

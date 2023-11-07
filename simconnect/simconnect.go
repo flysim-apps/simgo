@@ -317,7 +317,7 @@ func (sc *SimConnect) GetLastSentPacketID(pdwError *uint32) error {
 func (sc *SimConnect) Open(appTitle string) (error, uint32) {
 	err := sc.syscallSC.Open(uintptr(unsafe.Pointer(&sc.hSimConnect)), cChar(appTitle), uintptr(unsafe.Pointer(nil)), 0, 0, 0)
 	if err != nil {
-		return errors.New("No connected"), 0
+		return errors.New("Not connected"), 0
 	}
 	id := new(uint32)
 	sc.GetLastSentPacketID(id)

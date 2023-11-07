@@ -67,6 +67,9 @@ func (esc *EasySimConnect) SetLoggerLevel(level EasySimConnectLogLevel) {
 
 // Close Finishing EasySimConnect, All object created with this EasySimConnect's instance is perished after call this function
 func (esc *EasySimConnect) Close() <-chan bool {
+	if esc == nil {
+		return nil
+	}
 	esc.alive = false
 	return esc.cOpen
 }
