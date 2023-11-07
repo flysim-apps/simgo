@@ -107,13 +107,20 @@ func (esc *EasySimConnect) logf(level EasySimConnectLogLevel, format string, arg
 }
 
 func (esc *EasySimConnect) runDispatch() {
-	for esc.alive {
-		if esc.ctx.Err() != nil {
-			esc.logf(LogWarn, "Context error, quit")
+	defer func() {
+		esc.logf(LogWarn, "Defer panic in runDispatch()")
+		if r := recover(); r != nil {
 			defer esc.sc.Close()
 			defer func() {
 				esc.cOpen <- false
 			}()
+		}
+	}()
+
+	for esc.alive {
+		if esc.ctx.Err() != nil {
+			esc.logf(LogWarn, "Context error, quit")
+
 			panic("context canceled")
 		}
 		var ppdata unsafe.Pointer
