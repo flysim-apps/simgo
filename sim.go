@@ -109,16 +109,13 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 					s.Logger.Warning("Checking routine will exit")
 					return
 				case <-checker.C:
-					s.Logger.Debugf("connectToMsfsInProgress %v", connectToMsfsInProgress)
-					s.Logger.Debugf("simPaused %v", simPaused)
-					if !connectToMsfsInProgress && simPaused {
-						s.Logger.Infof("Check is paused")
+					if simPaused {
 						continue
 					}
 					timeOut5s := time.Now().Add(-5 * time.Second)
-					timeOutConnection := time.Now().Add(-5 * time.Minute)
+					timeOutConnection := time.Now().Add(-2 * time.Minute)
 					if connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeOutConnection) {
-						s.Logger.Error("Connection was not confirmed for 5m. Cancel tracking")
+						s.Logger.Error("Connection was not confirmed for 2m. Cancel tracking")
 						cancel()
 					}
 					if !connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeOut5s) {
@@ -174,12 +171,11 @@ func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *
 		case r := <-paused:
 			s.Logger.Debugf("Sim is paused: %v", r)
 			simPaused = r
-			//s.TrackPause <- simPaused
+			s.TrackPause <- simPaused
 		case r := <-airloaded:
 			s.Logger.Debugf("Aircraft: %v", r)
 		case <-crashed:
 			s.Logger.Error("Your are crashed !!")
-			s.TrackCrash <- true
 			<-sc.Close() // Wait close confirmation
 			return
 		}
