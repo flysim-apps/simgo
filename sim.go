@@ -109,9 +109,6 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 					s.Logger.Warning("Checking routine will exit")
 					return
 				case <-checker.C:
-					if simPaused {
-						continue
-					}
 					timeOut5s := time.Now().Add(-5 * time.Second)
 					timeOutConnection := time.Now().Add(-2 * time.Minute)
 					if connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeOutConnection) {
