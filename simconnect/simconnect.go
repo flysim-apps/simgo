@@ -4,6 +4,7 @@ package simconnect
 
 import (
 	"errors"
+	"fmt"
 	"unsafe"
 )
 
@@ -295,9 +296,13 @@ func (sc *SimConnect) CompleteCustomMissionAction(guidInstanceID GUID) (error, u
 
 // Close SimConnect_Close(HANDLE hSimConnect);
 func (sc *SimConnect) Close() (error, uint32) {
+	fmt.Println("Close()")
 	err := sc.syscallSC.Close(sc.hSimConnect)
+	fmt.Println("Close()")
 	id := new(uint32)
+	fmt.Println("Close()")
 	sc.GetLastSentPacketID(id)
+	fmt.Println("Close()")
 	return err, *id
 }
 

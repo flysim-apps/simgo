@@ -20,8 +20,8 @@ type SimGo struct {
 	State      chan int
 	Connection <-chan bool
 	TrackEvent chan interface{}
-	TrackPause chan interface{}
-	TrackCrash chan interface{}
+	TrackPause chan bool
+	TrackCrash chan bool
 	Logger     *logging.Logger
 	Socket     *websockets.Websocket
 	Context    context.Context
@@ -34,7 +34,7 @@ var simPaused = false
 
 // creates new simgo instance
 func NewSimGo(logger *logging.Logger) *SimGo {
-	return &SimGo{State: make(chan int, 1), TrackEvent: make(chan interface{}, 1), TrackPause: make(chan interface{}, 1), TrackCrash: make(chan interface{}, 1), Logger: logger}
+	return &SimGo{State: make(chan int, 1), TrackEvent: make(chan interface{}, 1), TrackPause: make(chan bool, 1), TrackCrash: make(chan bool, 1), Logger: logger}
 }
 
 // starts web socket server on given host and port
