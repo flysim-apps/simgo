@@ -34,7 +34,7 @@ var simPaused = false
 
 // creates new simgo instance
 func NewSimGo(logger *logging.Logger) *SimGo {
-	return &SimGo{State: make(chan int, 1), TrackEvent: make(chan interface{}, 5), TrackPause: make(chan bool, 0), TrackCrash: make(chan bool, 1), Logger: logger}
+	return &SimGo{State: make(chan int, 0), TrackEvent: make(chan interface{}, 0), TrackPause: make(chan bool, 0), TrackCrash: make(chan bool, 0), Logger: logger}
 }
 
 // starts web socket server on given host and port
