@@ -114,9 +114,6 @@ func (esc *EasySimConnect) runDispatch() {
 		esc.logf(LogWarn, "Defer panic in runDispatch()")
 		if r := recover(); r != nil {
 			defer esc.sc.Close()
-			defer func() {
-				esc.cOpen <- false
-			}()
 		}
 	}()
 
@@ -200,7 +197,6 @@ func (esc *EasySimConnect) runDispatch() {
 			go func() {
 				time.Sleep(esc.delay)
 				esc.sc.RequestDataOnSimObjectType(uint32(0), recv.dwDefineID, uint32(0), uint32(0))
-				return
 			}()
 
 		default:
