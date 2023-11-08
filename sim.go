@@ -174,7 +174,7 @@ func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *
 		case r := <-paused:
 			s.Logger.Debugf("Sim is paused: %v", r)
 			simPaused = r
-			s.TrackPause <- simPaused
+			//s.TrackPause <- simPaused
 		case r := <-airloaded:
 			s.Logger.Debugf("Aircraft: %v", r)
 		case <-crashed:
