@@ -200,6 +200,7 @@ func (esc *EasySimConnect) runDispatch() {
 			go func() {
 				time.Sleep(esc.delay)
 				esc.sc.RequestDataOnSimObjectType(uint32(0), recv.dwDefineID, uint32(0), uint32(0))
+				return
 			}()
 
 		default:

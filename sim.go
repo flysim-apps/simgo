@@ -34,7 +34,7 @@ var simPaused = false
 
 // creates new simgo instance
 func NewSimGo(logger *logging.Logger) *SimGo {
-	return &SimGo{State: make(chan int, 1), TrackEvent: make(chan interface{}, 1), TrackPause: make(chan bool, 1), TrackCrash: make(chan bool, 1), Logger: logger}
+	return &SimGo{State: make(chan int, 1), TrackEvent: make(chan interface{}, 5), TrackPause: make(chan bool, 0), TrackCrash: make(chan bool, 1), Logger: logger}
 }
 
 // starts web socket server on given host and port
@@ -166,7 +166,6 @@ func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *
 			lastMessageReceived = time.Now()
 			s.TrackEvent <- convertToInterface(reflect.ValueOf(report), sv)
 		case r := <-paused:
-			s.Logger.Debugf("Sim is paused: %v", r)
 			simPaused = r
 			s.TrackPause <- simPaused
 		case r := <-airloaded:
