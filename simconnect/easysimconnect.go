@@ -167,6 +167,9 @@ func (esc *EasySimConnect) runDispatch() {
 			case <-time.After(100 * time.Millisecond):
 			}
 			esc.logf(LogInfo, "SimConnect Exception : %s %#v\n", getTextException(recv.dwException), *recv)
+			esc.sc.Close()
+			esc.cOpen <- false
+			return
 		case SIMCONNECT_RECV_ID_SIMOBJECT_DATA, SIMCONNECT_RECV_ID_SIMOBJECT_DATA_BYTYPE:
 			recv := *(*SIMCONNECT_RECV_SIMOBJECT_DATA)(ppdata)
 			if len(esc.listSimVar) < int(recv.dwDefineID) {
