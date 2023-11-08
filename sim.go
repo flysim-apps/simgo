@@ -168,6 +168,7 @@ func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *
 			s.Logger.Warning("Tracking routine will exit")
 			return
 		case sv := <-cSimVar:
+			s.Logger.Debug("Received simVar")
 			lastMessageReceived = time.Now()
 			s.TrackEvent <- convertToInterface(reflect.ValueOf(report), sv)
 		case r := <-paused:
