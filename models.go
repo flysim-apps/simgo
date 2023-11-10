@@ -119,6 +119,7 @@ type Report struct {
 	TotalWeight             float64 `name:"TOTAL WEIGHT" unit:"Pounds"`
 	EmptyWeight             float64 `name:"EMPTY WEIGHT" unit:"Pounds"`
 	MaxGrossWeight          float64 `name:"MAX GROSS WEIGHT" unit:"Pounds"`
+	AtcOnParkingSpot        float64 `name:"ATC ON PARKING SPOT" unit:"Bool"`
 }
 
 type FlightEntry struct {
