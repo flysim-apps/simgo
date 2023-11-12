@@ -67,6 +67,9 @@ func (esc *EasySimConnect) SetLoggerLevel(level EasySimConnectLogLevel) {
 
 // Close Finishing EasySimConnect, All object created with this EasySimConnect's instance is perished after call this function
 func (esc *EasySimConnect) Close() <-chan bool {
+	if esc == nil {
+		return nil
+	}
 	esc.alive = false
 	return esc.cOpen
 }
@@ -107,13 +110,17 @@ func (esc *EasySimConnect) logf(level EasySimConnectLogLevel, format string, arg
 }
 
 func (esc *EasySimConnect) runDispatch() {
+	defer func() {
+		esc.logf(LogWarn, "Defer panic in runDispatch()")
+		if r := recover(); r != nil {
+			defer esc.sc.Close()
+		}
+	}()
+
 	for esc.alive {
 		if esc.ctx.Err() != nil {
 			esc.logf(LogWarn, "Context error, quit")
-			defer esc.sc.Close()
-			defer func() {
-				esc.cOpen <- false
-			}()
+
 			panic("context canceled")
 		}
 		var ppdata unsafe.Pointer
@@ -157,6 +164,9 @@ func (esc *EasySimConnect) runDispatch() {
 			case <-time.After(100 * time.Millisecond):
 			}
 			esc.logf(LogInfo, "SimConnect Exception : %s %#v\n", getTextException(recv.dwException), *recv)
+			esc.sc.Close()
+			esc.cOpen <- false
+			return
 		case SIMCONNECT_RECV_ID_SIMOBJECT_DATA, SIMCONNECT_RECV_ID_SIMOBJECT_DATA_BYTYPE:
 			recv := *(*SIMCONNECT_RECV_SIMOBJECT_DATA)(ppdata)
 			if len(esc.listSimVar) < int(recv.dwDefineID) {

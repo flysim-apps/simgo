@@ -2,7 +2,6 @@ package simgo
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -21,6 +20,8 @@ type SimGo struct {
 	State      chan int
 	Connection <-chan bool
 	TrackEvent chan interface{}
+	TrackPause chan bool
+	TrackCrash chan bool
 	Logger     *logging.Logger
 	Socket     *websockets.Websocket
 	Context    context.Context
@@ -29,10 +30,11 @@ type SimGo struct {
 var maxTriesInitial int
 var connectToMsfsInProgress = false
 var lastMessageReceived time.Time
+var simPaused = false
 
 // creates new simgo instance
 func NewSimGo(logger *logging.Logger) *SimGo {
-	return &SimGo{State: make(chan int, 1), TrackEvent: make(chan interface{}, 1), Logger: logger}
+	return &SimGo{State: make(chan int, 0), TrackEvent: make(chan interface{}, 0), TrackPause: make(chan bool, 0), TrackCrash: make(chan bool, 0), Logger: logger}
 }
 
 // starts web socket server on given host and port
@@ -107,15 +109,14 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 					s.Logger.Warning("Checking routine will exit")
 					return
 				case <-checker.C:
-					timeOut5s := time.Now().Add(-5 * time.Second)
-					timeOut15s := time.Now().Add(-30 * time.Second)
-					//s.Logger.Infof("Timeout checker: %v %v", connectToMsfsInProgress, lastMessageReceived)
-					if connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeOut15s) {
-						panic("Connection was not confirmed for 30s. Cancel tracking")
+					timeOut5s := time.Now().Add(-15 * time.Second)
+					timeOutConnection := time.Now().Add(-2 * time.Minute)
+					if connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeOutConnection) {
+						s.Logger.Error("Connection was not confirmed for 2m. Cancel tracking")
+						cancel()
 					}
 					if !connectToMsfsInProgress && !lastMessageReceived.IsZero() && lastMessageReceived.Before(timeOut5s) {
-						s.Logger.Info("Last received message was received 5 sec ago. Cancel tracking")
-						connectToMsfsInProgress = true
+						s.Logger.Error("Last received message was received 15 sec ago. Cancel tracking")
 						cancel()
 					}
 				}
@@ -135,17 +136,20 @@ func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, 
 }
 
 func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *sync.WaitGroup) {
+	connectToMsfsInProgress = true
 	sc, err := s.connect(ctx, name)
 	defer wg.Done()
 	defer sc.Close()
 
 	if err != nil {
-		panic("connection to MSFS has been failed. Reason: %s" + err.Error())
+		s.Logger.Errorf("connection to MSFS has been failed. Reason: %s", err.Error())
+		return
 	}
 
 	cSimVar, err := sc.ConnectToSimVar(convertToSimSimVar(reflect.ValueOf(report))...)
 	if err != nil {
-		panic("connection to MSFS has been failed. Reason: %s" + err.Error())
+		s.Logger.Errorf("ConnectToSimVar(): connection to MSFS has been failed. Reason: %s", err.Error())
+		return
 	}
 
 	crashed := sc.ConnectSysEventCrashed()
@@ -158,10 +162,12 @@ func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *
 			s.Logger.Warning("Tracking routine will exit")
 			return
 		case sv := <-cSimVar:
+			s.Logger.Debug("Received simVar")
 			lastMessageReceived = time.Now()
 			s.TrackEvent <- convertToInterface(reflect.ValueOf(report), sv)
 		case r := <-paused:
-			s.Logger.Debugf("Sim is paused: %v", r)
+			simPaused = r
+			s.TrackPause <- simPaused
 		case r := <-airloaded:
 			s.Logger.Debugf("Aircraft: %v", r)
 		case <-crashed:
@@ -169,38 +175,6 @@ func (s *SimGo) track(name string, report interface{}, ctx context.Context, wg *
 			<-sc.Close() // Wait close confirmation
 			return
 		}
-	}
-}
-
-func (s *SimGo) trackSimVars(sc *sim.EasySimConnect, report reflect.Value) error {
-	if err := s.ConnectToSimVar(sc, convertToSimSimVar(report), report); err != nil {
-		return errors.New(fmt.Sprintf("failed to connect to SimVar: %v ", err.Error()))
-	}
-	return nil
-}
-
-func (s *SimGo) ConnectToSimVar(sc *sim.EasySimConnect, listSimVar []sim.SimVar, returnType reflect.Value) error {
-	if sc == nil {
-		return errors.New("sim connect is nil")
-	}
-
-	cSimVar, err := sc.ConnectToSimVar(listSimVar...)
-	if err != nil {
-		return err
-	}
-
-	crashed := sc.ConnectSysEventCrashed()
-	for {
-		select {
-		case sv := <-cSimVar:
-			lastMessageReceived = time.Now()
-			s.TrackEvent <- convertToInterface(returnType, sv)
-		case <-crashed:
-			s.Logger.Error("Your are crashed !!")
-			<-sc.Close() // Wait close confirmation
-			return nil
-		}
-
 	}
 }
 
@@ -273,6 +247,7 @@ func (s *SimGo) recoverer(maxPanics, id int, f func()) {
 				} else {
 					maxPanics = maxTriesInitial
 				}
+				s.Logger.Info("Recovering...")
 				go s.recoverer(maxPanics, id, f)
 			}
 		}
