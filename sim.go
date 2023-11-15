@@ -13,18 +13,23 @@ import (
 	sim "github.com/flysim-apps/simgo/simconnect"
 	"github.com/flysim-apps/simgo/websockets"
 	"github.com/op/go-logging"
+	"nhooyr.io/websocket"
 )
 
 type SimGo struct {
-	Error      error
-	State      chan int
-	Connection <-chan bool
-	TrackEvent chan interface{}
-	TrackPause chan bool
-	TrackCrash chan bool
-	Logger     *logging.Logger
-	Socket     *websockets.Websocket
-	Context    context.Context
+	Error       error
+	State       chan int
+	Connection  <-chan bool
+	TrackEvent  chan interface{}
+	TrackPause  chan bool
+	TrackCrash  chan bool
+	TrackFailed chan bool
+	Logger      *logging.Logger
+	Socket      *websockets.Websocket
+	Context     context.Context
+	WS          *websocket.Conn
+	Provider    Provider
+	Alive       chan bool
 }
 
 var maxTriesInitial int
@@ -33,8 +38,8 @@ var lastMessageReceived time.Time
 var simPaused = false
 
 // creates new simgo instance
-func NewSimGo(logger *logging.Logger) *SimGo {
-	return &SimGo{State: make(chan int, 0), TrackEvent: make(chan interface{}, 0), TrackPause: make(chan bool, 0), TrackCrash: make(chan bool, 0), Logger: logger}
+func NewSimGo(logger *logging.Logger, provider Provider) *SimGo {
+	return &SimGo{State: make(chan int, 0), TrackEvent: make(chan interface{}, 0), TrackPause: make(chan bool, 0), TrackCrash: make(chan bool, 0), TrackFailed: make(chan bool, 0), Logger: logger, Provider: provider}
 }
 
 // starts web socket server on given host and port
@@ -49,6 +54,26 @@ func (s *SimGo) StartWebSocket(httpListen string) error {
 		}
 	}()
 	return nil
+}
+
+func (s *SimGo) FSUIPC(ctx context.Context, host string) error {
+	s.Context = ctx
+	ws, _, err := websocket.Dial(ctx, host, &websocket.DialOptions{
+		Subprotocols: []string{"fsuipc"},
+	})
+	if err != nil {
+		return err
+	}
+	s.WS = ws
+	s.Logger.Info("Connected to FSUIPC")
+
+	return nil
+}
+
+func (s *SimGo) FSUIPC_Close() {
+	s.Logger.Info("Closed connection to FSUIPC")
+	defer s.WS.CloseNow()
+	s.WS.Close(websocket.StatusNormalClosure, "")
 }
 
 // connects to MSFS
@@ -88,6 +113,11 @@ func (s *SimGo) connect(ctx context.Context, name string) (*sim.EasySimConnect, 
 }
 
 func (s *SimGo) TrackWithRecover(name string, report interface{}, maxTries int, trackID int) {
+
+	if s.Provider == FSUIPC {
+		return
+	}
+
 	maxTriesInitial = maxTries
 
 	go s.recoverer(maxTries, trackID, func() {
