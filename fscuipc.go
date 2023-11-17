@@ -7,6 +7,7 @@ import (
 	"math"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"nhooyr.io/websocket/wsjson"
 )
@@ -169,75 +170,65 @@ func setValueForField(srcType reflect.StructField, src reflect.Value, dst reflec
 		} else {
 			return errors.New(fmt.Sprintf("[knots  ] %s = %s", srcType.Name, dst.String()))
 		}
-		break
 	case "mach":
 		if src.CanFloat() {
-			dst.SetFloat(src.Float() / 2048)
+			dst.SetFloat(src.Float() / 2048 / 10)
 		} else {
 			return errors.New(fmt.Sprintf("[mach   ] %s = %s", srcType.Name, dst.String()))
 		}
-		break
 	case "degrees":
-		if src.CanFloat() {
-			dst.SetFloat(src.Float() * 360 / (65536 * 65536))
-		} else {
-			return errors.New(fmt.Sprintf("[degrees] %s (%s) = %s", srcType.Name, src.Kind(), dst.String()))
-		}
-		break
-	case "wind":
-		if src.CanFloat() {
-			dst.SetFloat(src.Float() * 360 / 65536)
-		} else {
-			return errors.New(fmt.Sprintf("[wind   ] %s = %s", srcType.Name, dst.String()))
-		}
-		break
+		dst.SetFloat(src.Float() * 360 / (65536 * 65536))
+	case "raddeg":
+		dst.SetFloat(src.Float() * 180 / math.Pi)
+	case "GForce":
+		dst.SetFloat(src.Float() / 624)
+	case "radio":
+		dst.SetInt(int64(float64(src.Int()/65536) * 3.28084))
+	case "floating":
+		dst.SetInt(int64(float64(src.Int() * 90.0 / (10001750.0 * 65536.0 * 65536.0))))
+	case "ftm":
+		dst.SetInt(int64(float64(src.Int()*60.0) * 3.28084 / 256))
+	case "velocity":
+		dst.SetInt(int64(float64(src.Int()/65536) * 1.944))
 	case "feet":
-		if src.CanFloat() || src.CanInt() {
-			var floatv float64
-			if src.CanFloat() {
-				floatv = src.Float()
-			} else {
-				floatv = float64(src.Int())
-			}
-			dst.SetInt(int64(math.Round(floatv / (65535 * 65535) * 3.28084)))
+		if src.CanFloat() {
+			dst.SetInt(int64(math.Round(src.Float() * 3.28084)))
 		} else {
 			return errors.New(fmt.Sprintf("%s = %s", srcType.Name, dst.String()))
 		}
-		break
 	case "bool":
 		if src.CanInt() {
 			dst.SetBool(src.Int() > 0)
 		} else {
 			return errors.New(fmt.Sprintf("%s = %s", srcType.Name, dst.String()))
 		}
-		break
 	case "position":
 		if src.CanInt() {
 			dst.SetInt(src.Int())
 		} else {
 			return errors.New(fmt.Sprintf("%s = %s", srcType.Name, dst.String()))
 		}
-		break
-	case "percents":
-		total := int64(16384)
-		if src.CanInt() {
-			dst.SetInt(src.Int() / total * 100)
+	case "percent":
+		total := float64(16384)
+		if src.Kind().String() == "float64" {
+			dst.SetFloat(float64(src.Float()) / total * 100)
 		} else {
-			return errors.New(fmt.Sprintf("%s = %s", srcType.Name, dst.String()))
+			fmt.Printf("%s (%s) = %s\n", srcType.Name, src.Kind(), dst.String())
+			dst.SetFloat(float64(src.Int()) / total * 100)
 		}
-		break
 	case "bits":
-		if srcType.Name == "Lights" {
-
-		}
-		break
 	default:
 		//fmt.Printf("%s (%s) = %s\n", srcType.Name, src.Kind(), dst.String())
 		if src.CanFloat() {
 			dst.SetFloat(src.Float())
 		} else if src.CanInt() {
-			dst.SetInt(src.Int())
-		} else {
+			//fmt.Printf("Kind: %s\n", dst.Kind().String())
+			if strings.Contains(dst.Kind().String(), "float") {
+				dst.SetFloat(float64(src.Int()))
+			} else {
+				dst.SetInt(src.Int())
+			}
+		} else if src.Kind().String() != "map" {
 			dst.SetString(src.String())
 		}
 	}

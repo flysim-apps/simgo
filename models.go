@@ -19,85 +19,84 @@ const (
 )
 
 type Report struct {
-	AltitudeAboveGround  int     `json:"" unit:"feet"`
-	PlaneAltitude        int     `json:"" unit:"feet"`
-	Altitude             int     `json:"" unit:"feet"`
-	RadioHeight          int     `json:"" unit:"feet"`
-	Latitude             float64 `json:"" unit:"degrees"`
-	Longitude            float64 `json:"" unit:"degrees"`
-	Heading              float64 `json:"" unit:"degrees"`
-	HeadingMagnetic      float64 `json:"" unit:"degrees"`
-	Airspeed             int     `json:"" unit:"knots"`
-	AirspeedTrue         int     `json:"" unit:"knots"`
-	AirspeedMach         float64 `json:"" unit:"mach"`
-	VerticalSpeed        int     `json:"" unit:"ft/s"`
-	FlapsLeft            int     `json:"" unit:"position"`
-	FlapsRight           int     `json:"" unit:"position"`
-	Trim                 int     `json:"" unit:"position"`
-	RudderTrim           int     `json:"" unit:"position"`
-	AleronTrim           int     `json:"" unit:"position"`
-	AmbientWindDirection float64 `json:"" unit:"degrees"`
-	AmbientWindVelocity  int     `json:"" unit:"knots"`
-	AmbientTemperature   int     `json:"" unit:"celcium"`
-	SurfaceType          int     `json:""`
-	SurfaceCondition     int     `json:""`
-	GroundVelocity       int     `json:"" unit:"knots"`
-	Pitch                float64 `json:"" unit:"degrees"`
-	Bank                 float64 `json:"" unit:"degrees"`
-	Title                string  `json:"" type:"string" size:"256"`
-	OnGround             bool    `json:"" unit:"bool"`
-	APUSwitch            bool    `json:"" unit:"bool"`
-	BatterySwitch        bool    `json:"" unit:"bool"`
-	ExtPowerOn           bool    `address:"0x07AB" type:"uint" size:"1" unit:"bool"`
-	DoorsClosed          bool    `address:"0x2A70" type:"uint" size:"8" unit:"bool"`
-	LightsNav            bool    `address:"0x0D0C" type:"bits" size:"2" index:"0" unit:"bool"`
-	LightsBeacon         bool    `address:"0x0D0C" type:"bits" size:"2" index:"1" unit:"bool"`
-	LightsLanding        bool    `address:"0x0D0C" type:"bits" size:"2" index:"2" unit:"bool"`
-	LightsTaxi           bool    `address:"0x0D0C" type:"bits" size:"2" index:"3" unit:"bool"`
-	LightsStrobe         bool    `address:"0x0D0C" type:"bits" size:"2" index:"4" unit:"bool"`
-	LightsInstruments    bool    `address:"0x0D0C" type:"bits" size:"2" index:"5" unit:"bool"`
-	LightsRecognition    bool    `address:"0x0D0C" type:"bits" size:"2" index:"6" unit:"bool"`
-	LightsWing           bool    `address:"0x0D0C" type:"bits" size:"2" index:"7" unit:"bool"`
-	LightsLogo           bool    `address:"0x0D0C" type:"bits" size:"2" index:"8" unit:"bool"`
-	LightsCabin          bool    `address:"0x0D0C" type:"bits" size:"2" index:"9" unit:"bool"`
-	FastenSeatBealts     bool    `address:"0x341D" type:"int" size:"1" unit:"bool"`
-	NoSmoking            bool    `address:"0x341C" type:"int" size:"1" unit:"bool"`
-	StallWarning         bool    `address:"0x036C" type:"int" size:"1" unit:"bool"`
-	OverspeedWarning     bool    `address:"0x036D" type:"int" size:"1" unit:"bool"`
-	InParkingState       bool    `address:"0x062B" type:"int" size:"1" unit:"bool"`
-	PushbackAngle        float64 `address:"0x0334" type:"unit" size:"4" unit:"degrees"`
-	PushbackState        int     `address:"0x31F4" `
-	GearHandlePosition   int     `address:"0x0BE8" unit:"position"`
-	GForce               float64 `address:"0x1140" type:"uint" size:"8" unit:"GForce"`
-	GForceMin            float64 `address:"0x34D8" type:"uint" size:"8" unit:"GForce"`
-	GForceMax            float64 `address:"0x34D0" type:"uint" size:"8" unit:"GForce"`
-	NumberOfEngines      int     `address:"0x0AEC"`
-	Engine1Combustion    bool    `address:"0x0894" unit:"bool"`
-	Engine2Combustion    bool    `address:"0x092C" unit:"bool"`
-	Engine3Combustion    bool    `address:"0x09C4" unit:"bool"`
-	Engine4Combustion    bool    `address:"0x0A5C" unit:"bool"`
-	Engine1Failed        bool    `address:"0x0B6B" type:"bits" size:"1" index:"0" unit:"bool"`
-	Engine2Failed        bool    `address:"0x0B6B" type:"bits" size:"1" index:"1" unit:"bool"`
-	Engine3Failed        bool    `address:"0x0B6B" type:"bits" size:"1" index:"2" unit:"bool"`
-	Engine4Failed        bool    `address:"0x0B6B" type:"bits" size:"1" index:"3" unit:"bool"`
-	Engine1TurbN1        float64 `json:"" unit:"percent"`
-	Engine2TurbN1        float64 `json:"" unit:"percent"`
-	Engine3TurbN1        float64 `json:"" unit:"percent"`
-	Engine4TurbN1        float64 `json:"" unit:"percent"`
-	Engine1TurbN2        float64 `json:"" unit:"percent"`
-	Engine2TurbN2        float64 `json:"" unit:"percent"`
-	Engine3TurbN2        float64 `json:"" unit:"percent"`
-	Engine4TurbN2        float64 `json:"" unit:"percent"`
-	LocalTime            int     `json:"localTime"`
-	ZuluHour             int     `json:"zuluHour"`
-	ZuluMinute           int     `json:"zuluMinute"`
-	ZuluDayOfWeek        int     `json:"zuluDayOfWeek"`
-	ZuluDayOfMonth       int     `json:"zuluDayOfMonth"`
-	ZuluMonthOfYear      int     `json:"zuluMonthOfYear"`
-	ZuluDayOfYear        int     `json:"zuluDayOfYear"`
-	ZuluYear             int     `json:"zuluYear"`
-	BrakeParkingPosition int     `json:"breakeParkingPosition"`
-	BrakeIndicator       bool    `json:"brakeIndicator" unit:"bool"`
+	Agl                  int          `json:"" unit:"feet"`
+	Alt                  int          `json:"" unit:"feet"`
+	AltRadio             int          `json:"" unit:"feet"`
+	Latitude             float64      `json:"" unit:"degrees"`
+	Longitude            float64      `json:"" unit:"degrees"`
+	Heading              float64      `json:"" unit:"degrees"`
+	MagVar               float64      `json:"" unit:"degrees"`
+	Airspeed             int          `json:"" unit:"knots"`
+	AirspeedTrue         int          `json:"" unit:"knots"`
+	AirspeedMach         float64      `json:"" unit:"mach"`
+	VerticalSpeed        int          `json:"" unit:"ft/s"`
+	FlapsLeft            int          `json:"" unit:"position"`
+	FlapsRight           int          `json:"" unit:"position"`
+	ElevatorTrim         float64      `json:"" unit:"position"`
+	RudderTrim           float64      `json:"" unit:"position"`
+	AleronTrim           float64      `json:"" unit:"position"`
+	AmbientWindDirection float64      `json:"" unit:"wind"`
+	AmbientWindVelocity  float64      `json:"" unit:"knots"`
+	AmbientTemperature   float64      `json:"" unit:"celcium"`
+	SurfaceType          int          `json:""`
+	SurfaceCondition     int          `json:""`
+	GroundVelocity       int          `json:"" unit:"knots"`
+	Pitch                float64      `json:"" unit:"degrees"`
+	Bank                 float64      `json:"" unit:"degrees"`
+	Title                string       `json:"" type:"string" size:"256"`
+	OnGround             bool         `json:"" unit:"bool"`
+	APUSwitch            bool         `json:"" unit:"bool"`
+	BatterySwitch        bool         `json:"" unit:"bool"`
+	ExtPowerOn           bool         `address:"0x07AB" type:"uint" size:"1" unit:"bool"`
+	IsDoorsOpen          bool         `address:"0x2A70" type:"uint" size:"8" unit:"bool"`
+	Lights               map[int]bool `address:"0x0D0C" type:"bits" size:"2" index:"0" unit:"bool"`
+	LightsNav            bool         `address:"0x0D0C" type:"bits" size:"2" index:"0" unit:"bool"`
+	LightsBeacon         bool         `address:"0x0D0C" type:"bits" size:"2" index:"1" unit:"bool"`
+	LightsLanding        bool         `address:"0x0D0C" type:"bits" size:"2" index:"2" unit:"bool"`
+	LightsTaxi           bool         `address:"0x0D0C" type:"bits" size:"2" index:"3" unit:"bool"`
+	LightsStrobe         bool         `address:"0x0D0C" type:"bits" size:"2" index:"4" unit:"bool"`
+	LightsInstruments    bool         `address:"0x0D0C" type:"bits" size:"2" index:"5" unit:"bool"`
+	LightsRecognition    bool         `address:"0x0D0C" type:"bits" size:"2" index:"6" unit:"bool"`
+	LightsWing           bool         `address:"0x0D0C" type:"bits" size:"2" index:"7" unit:"bool"`
+	LightsLogo           bool         `address:"0x0D0C" type:"bits" size:"2" index:"8" unit:"bool"`
+	LightsCabin          bool         `address:"0x0D0C" type:"bits" size:"2" index:"9" unit:"bool"`
+	FastenSeatBealts     bool         `address:"0x341D" type:"int" size:"1" unit:"bool"`
+	NoSmoking            bool         `address:"0x341C" type:"int" size:"1" unit:"bool"`
+	StallWarning         bool         `address:"0x036C" type:"int" size:"1" unit:"bool"`
+	OverspeedWarning     bool         `address:"0x036D" type:"int" size:"1" unit:"bool"`
+	InParkingState       bool         `address:"0x062B" type:"int" size:"1" unit:"bool"`
+	PushbackAngle        float64      `address:"0x0334" type:"unit" size:"4" unit:"degrees"`
+	PushbackStatus       int          `address:"0x31F4" `
+	GearHandlePosition   int          `address:"0x0BE8" unit:"position"`
+	GForce               float64      `address:"0x1140" type:"uint" size:"8" unit:"GForce"`
+	NumberOfEngines      int          `address:"0x0AEC"`
+	Engine1Combustion    bool         `address:"0x0894" unit:"bool"`
+	Engine2Combustion    bool         `address:"0x092C" unit:"bool"`
+	Engine3Combustion    bool         `address:"0x09C4" unit:"bool"`
+	Engine4Combustion    bool         `address:"0x0A5C" unit:"bool"`
+	EngineFailed         map[int]bool `address:"0x0B6B" type:"bits" size:"1" index:"0" unit:"bool"`
+	Engine1Failed        bool         `address:"0x0B6B" type:"bits" size:"1" index:"0" unit:"bool"`
+	Engine2Failed        bool         `address:"0x0B6B" type:"bits" size:"1" index:"1" unit:"bool"`
+	Engine3Failed        bool         `address:"0x0B6B" type:"bits" size:"1" index:"2" unit:"bool"`
+	Engine4Failed        bool         `address:"0x0B6B" type:"bits" size:"1" index:"3" unit:"bool"`
+	Engine1TurbN1        float64      `json:"" unit:"percent"`
+	Engine2TurbN1        float64      `json:"" unit:"percent"`
+	Engine3TurbN1        float64      `json:"" unit:"percent"`
+	Engine4TurbN1        float64      `json:"" unit:"percent"`
+	Engine1TurbN2        float64      `json:"" unit:"percent"`
+	Engine2TurbN2        float64      `json:"" unit:"percent"`
+	Engine3TurbN2        float64      `json:"" unit:"percent"`
+	Engine4TurbN2        float64      `json:"" unit:"percent"`
+	LocalTime            int          `json:"localTime"`
+	ZuluHour             int          `json:"zuluHour"`
+	ZuluMinute           int          `json:"zuluMinute"`
+	ZuluDayOfWeek        int          `json:"zuluDayOfWeek"`
+	ZuluDayOfMonth       int          `json:"zuluDayOfMonth"`
+	ZuluMonthOfYear      int          `json:"zuluMonthOfYear"`
+	ZuluDayOfYear        int          `json:"zuluDayOfYear"`
+	ZuluYear             int          `json:"zuluYear"`
+	BrakeParkingPosition int          `json:"breakeParkingPosition"`
+	BrakeIndicator       bool         `json:"brakeIndicator" unit:"bool"`
 }
 
 type FlightEntry struct {
@@ -123,87 +122,70 @@ func getValue(field reflect.Value, simVar sim.SimVar) {
 }
 
 type FSUIPC_Offset_Linkage struct {
-	AltitudeAboveGround  int64        `address:"0x0020" type:"int" size:"8" unit:"feet"`
-	PlaneAltitude        int64        `address:"0x0570" type:"int" size:"8" unit:"feet"`
-	Altitude             int64        `address:"0x0590" type:"int" size:"8" unit:"feet"`
-	RadioHeight          int64        `address:"0x31E4" type:"int" size:"8" unit:"feet"`
-	Latitude             float64      `address:"0x0560" type:"uint" size:"8" unit:"degrees"`
-	Longitude            float64      `address:"0x0568" type:"uint" size:"8" unit:"degrees"`
+	Agl                  float64      `address:"0x6020" type:"float" size:"8" unit:"feet"`
+	Alt                  int64        `address:"0x0590" type:"int" size:"4"`
+	AltRadio             int64        `address:"0x31E4" type:"int" size:"4" unit:"radio"`
+	Latitude             float64      `address:"0x6010" type:"float" size:"8"`
+	Longitude            float64      `address:"0x6018" type:"float" size:"8"`
 	Heading              float64      `address:"0x0580" type:"uint" size:"4" unit:"degrees"`
-	HeadingMagnetic      float64      `address:"0x2B00" type:"uint" size:"8" unit:"degrees"`
+	MagVar               float64      `address:"0x6028" type:"float" size:"8" unit:"raddeg"`
 	Airspeed             int          `address:"0x02BC" type:"int" size:"4" unit:"knots"`
 	AirspeedTrue         int          `address:"0x02B8" type:"int" size:"4" unit:"knots"`
 	AirspeedMach         float64      `address:"0x11C6" type:"uint" size:"2" unit:"mach"`
-	VerticalSpeed        int          `address:"0x02C8" type:"int" size:"4" unit:"ft/s"`
+	VerticalSpeed        int          `address:"0x02C8" type:"int" size:"4" unit:"ftm"`
 	FlapsLeft            int          `address:"0x0BE0" type:"int" size:"4" unit:"position"`
 	FlapsRight           int          `address:"0x0BE4" type:"int" size:"4" unit:"position"`
-	Trim                 int          `address:"0x0BC0" type:"int" size:"4" unit:"position"`
-	RudderTrim           int          `address:"0x0C04" type:"int" size:"4" unit:"position"`
-	AleronTrim           int          `address:"0x0C02" type:"int" size:"4" unit:"position"`
-	AmbientWindDirection float64      `address:"0x0E92" type:"uint" size:"8" unit:"wind"`
-	AmbientWindVelocity  int          `address:"0x0E90" type:"int" size:"2" unit:"knots"`
-	AmbientTemperature   int          `address:"0x0E8C" type:"int" size:"2" unit:"celcium"`
+	ElevatorTrim         float64      `address:"0x0BC0" type:"int" size:"2" unit:"percent"`
+	RudderTrim           float64      `address:"0x0C04" type:"int" size:"2" unit:"percent"`
+	AleronTrim           float64      `address:"0x0C02" type:"int" size:"2" unit:"percent"`
+	Pitch                float64      `address:"0x0578" type:"int" size:"4" unit:"degrees"`
+	Bank                 float64      `address:"0x057C" type:"int" size:"4" unit:"degrees"`
+	AmbientWindDirection float64      `address:"0x3490" type:"float" size:"8" unit:"wind"`
+	AmbientWindVelocity  float64      `address:"0x0E90" type:"int" size:"2"`
+	AmbientTemperature   float64      `address:"0x34A8" type:"float" size:"8"`
 	SurfaceType          int          `address:"0x31E8" type:"int" size:"4"`
 	SurfaceCondition     int          `address:"0x31EC" type:"int" size:"4"`
-	GroundVelocity       int          `address:"0x02B4" type:"int" size:"4" unit:"knots"`
-	Pitch                float64      `address:"0x0578" type:"uint" size:"8" unit:"degrees"`
-	Bank                 float64      `address:"0x057C" type:"uint" size:"8" unit:"degrees"`
+	GroundVelocity       int          `address:"0x02B4" type:"int" size:"4" unit:"velocity"`
 	Title                string       `address:"0x3D00" type:"string" size:"256"`
 	OnGround             int          `address:"0x0366" type:"uint" size:"2" unit:"bool"`
 	APUSwitch            int          `address:"0x029D" type:"uint" size:"1" unit:"bool"`
 	BatterySwitch        int          `address:"0x281C" type:"uint" size:"4" unit:"bool"`
 	ExtPowerOn           int          `address:"0x07AB" type:"uint" size:"1" unit:"bool"`
-	DoorsClosed          int          `address:"0x2A70" type:"uint" size:"8" unit:"bool"`
+	IsDoorsOpen          int          `address:"0x2A70" type:"uint" size:"8" unit:"bool"`
 	Lights               map[int]bool `address:"0x0D0C" type:"bits" size:"2"`
-	LightsNav            bool         `address:"0x0D0C" type:"bits" size:"2" index:"0" unit:"bool"`
-	LightsBeacon         bool         `address:"0x0D0C" type:"bits" size:"2" index:"1" unit:"bool"`
-	LightsLanding        bool         `address:"0x0D0C" type:"bits" size:"2" index:"2" unit:"bool"`
-	LightsTaxi           bool         `address:"0x0D0C" type:"bits" size:"2" index:"3" unit:"bool"`
-	LightsStrobe         bool         `address:"0x0D0C" type:"bits" size:"2" index:"4" unit:"bool"`
-	LightsInstruments    bool         `address:"0x0D0C" type:"bits" size:"2" index:"5" unit:"bool"`
-	LightsRecognition    bool         `address:"0x0D0C" type:"bits" size:"2" index:"6" unit:"bool"`
-	LightsWing           bool         `address:"0x0D0C" type:"bits" size:"2" index:"7" unit:"bool"`
-	LightsLogo           bool         `address:"0x0D0C" type:"bits" size:"2" index:"8" unit:"bool"`
-	LightsCabin          bool         `address:"0x0D0C" type:"bits" size:"2" index:"9" unit:"bool"`
 	FastenSeatBealts     int          `address:"0x341D" type:"int" size:"1" unit:"bool"`
 	NoSmoking            int          `address:"0x341C" type:"int" size:"1" unit:"bool"`
 	StallWarning         int          `address:"0x036C" type:"int" size:"1" unit:"bool"`
 	OverspeedWarning     int          `address:"0x036D" type:"int" size:"1" unit:"bool"`
 	InParkingState       int          `address:"0x062B" type:"int" size:"1" unit:"bool"`
-	PushbackAngle        float64      `address:"0x0334" type:"uint" size:"4" unit:"degrees"`
-	PushbackState        int          `address:"0x31F4" type:"int" size:"4"`
+	BrakeParkingPosition int          `address:"0x0BC8" type:"int" size:"2"`
+	BrakeIndicator       int          `address:"0x0BCA" type:"int" size:"2" unit:"bool"`
+	PushbackAngle        float64      `address:"0x0334" type:"int" size:"4" unit:"degrees"`
+	PushbackStatus       int          `address:"0x31F0" type:"int" size:"4"`
 	GearHandlePosition   int          `address:"0x0BE8" type:"int" size:"4" unit:"position"`
-	GForce               float64      `address:"0x1140" type:"uint" size:"8" unit:"GForce"`
-	GForceMin            float64      `address:"0x34D8" type:"uint" size:"8" unit:"GForce"`
-	GForceMax            float64      `address:"0x34D0" type:"uint" size:"8" unit:"GForce"`
+	GForce               float64      `address:"0x11BA" type:"int" size:"2" unit:"GForce"`
 	NumberOfEngines      int          `address:"0x0AEC" type:"int" size:"2"`
-	Engine1Combustion    int          `address:"0x0894" unit:"bool"`
-	Engine2Combustion    int          `address:"0x092C" unit:"bool"`
-	Engine3Combustion    int          `address:"0x09C4" unit:"bool"`
-	Engine4Combustion    int          `address:"0x0A5C" unit:"bool"`
+	Engine1Combustion    int          `address:"0x0894" type:"int" size:"2" unit:"bool"`
+	Engine2Combustion    int          `address:"0x092C" type:"int" size:"2" unit:"bool"`
+	Engine3Combustion    int          `address:"0x09C4" type:"int" size:"2" unit:"bool"`
+	Engine4Combustion    int          `address:"0x0A5C" type:"int" size:"2" unit:"bool"`
 	EngineFailed         map[int]bool `address:"0x0B6B" type:"bits" size:"1"`
-	Engine1Failed        bool         `address:"0x0B6B" type:"bits" size:"1" index:"0" unit:"bool"`
-	Engine2Failed        bool         `address:"0x0B6B" type:"bits" size:"1" index:"1" unit:"bool"`
-	Engine3Failed        bool         `address:"0x0B6B" type:"bits" size:"1" index:"2" unit:"bool"`
-	Engine4Failed        bool         `address:"0x0B6B" type:"bits" size:"1" index:"3" unit:"bool"`
-	Engine1TurbN1        float64      `address:"0x0898" unit:"percent"`
-	Engine2TurbN1        float64      `address:"0x0930" unit:"percent"`
-	Engine3TurbN1        float64      `address:"0x09C8" unit:"percent"`
-	Engine4TurbN1        float64      `address:"0x0A60" unit:"percent"`
-	Engine1TurbN2        float64      `address:"0x0896" unit:"percent"`
-	Engine2TurbN2        float64      `address:"0x092E" unit:"percent"`
-	Engine3TurbN2        float64      `address:"0x09C6" unit:"percent"`
-	Engine4TurbN2        float64      `address:"0x0A5E" unit:"percent"`
+	Engine1TurbN1        int          `address:"0x0898" type:"int" size:"2" unit:"percent"`
+	Engine2TurbN1        int          `address:"0x0930" type:"int" size:"2" unit:"percent"`
+	Engine3TurbN1        int          `address:"0x09C8" type:"int" size:"2" unit:"percent"`
+	Engine4TurbN1        int          `address:"0x0A60" type:"int" size:"2" unit:"percent"`
+	Engine1TurbN2        int          `address:"0x0896" type:"int" size:"2" unit:"percent"`
+	Engine2TurbN2        int          `address:"0x092E" type:"int" size:"2" unit:"percent"`
+	Engine3TurbN2        int          `address:"0x09C6" type:"int" size:"2" unit:"percent"`
+	Engine4TurbN2        int          `address:"0x0A5E" type:"int" size:"2" unit:"percent"`
 	LocalTime            int          `address:"0x023A" type:"int" size:"1"`
 	ZuluHour             int          `address:"0x023B" type:"int" size:"1"`
 	ZuluMinute           int          `address:"0x023C" type:"int" size:"1"`
 	ZuluDayOfWeek        int          `address:"0x0243" type:"int" size:"1"`
 	ZuluDayOfMonth       int          `address:"0x023D" type:"int" size:"1"`
 	ZuluMonthOfYear      int          `address:"0x0242" type:"int" size:"1"`
-	ZuluDayOfYear        int          `address:"0x023E"`
-	ZuluYear             int          `address:"0x0240"`
-	BrakeParkingPosition int          `address:"0x0BC8"`
-	BrakeIndicator       int          `address:"0x0BCA" unit:"bool"`
+	ZuluDayOfYear        int          `address:"0x023E" type:"int" size:"2"`
+	ZuluYear             int          `address:"0x0240" type:"int" size:"2"`
 }
 
 type FSUIPC_Offset_Payload struct {

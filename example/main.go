@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/flysim-apps/simgo"
 	"github.com/op/go-logging"
@@ -34,7 +35,19 @@ func main() {
 	for {
 		select {
 		case result := <-eventChan:
-			logger.Debugf("Event: %+v", result)
+			logger.Debugf("===================================================================================")
+			val := reflect.ValueOf(result)
+			for i := 0; i < val.Type().NumField(); i++ {
+				if val.Field(i).Kind().String() == "int" {
+					logger.Debugf("%s = %v", val.Type().Field(i).Name, val.Field(i).Int())
+				} else if val.Field(i).Kind().String() == "float64" {
+					logger.Debugf("%s = %v", val.Type().Field(i).Name, val.Field(i).Float())
+				} else if val.Field(i).Kind().String() == "bool" {
+					logger.Debugf("%s = %v", val.Type().Field(i).Name, val.Field(i).Bool())
+				} else {
+					logger.Debugf("%s = %v", val.Type().Field(i).Name, val.Field(i).String())
+				}
+			}
 		case result := <-payloadChan:
 			logger.Debugf("Payload: %+v", result)
 		case <-sim.TrackFailed:
