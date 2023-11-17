@@ -20,7 +20,7 @@ func main() {
 		panic("Unable to establish websocket connection: " + err.Error())
 	}
 
-	if err := sim.OffsetPolling("event", simgo.FSUIPC_Offset_Linkage{}, 1000); err != nil {
+	if err := sim.OffsetPolling("event", simgo.Offsets{}, 1000); err != nil {
 		sim.Logger.Errorf("Failed to obtain polling: %s", err.Error())
 	}
 	if err := sim.Payload(10000); err != nil {
@@ -30,7 +30,7 @@ func main() {
 	eventChan := make(chan interface{})
 	payloadChan := make(chan interface{})
 
-	sim.ReadData("event", simgo.Report{}, eventChan, payloadChan)
+	sim.ReadData("event", simgo.Offsets{}, eventChan, payloadChan)
 
 	for {
 		select {

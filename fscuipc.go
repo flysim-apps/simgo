@@ -77,7 +77,7 @@ func (s *SimGo) ReadData(name string, v interface{}, eventChan chan interface{},
 					break
 				case "offsets.read":
 					if name == msg.Name {
-						linkage := FSUIPC_Offset_Linkage{}
+						linkage := Offsets{}
 						linkage.LoadFromMap(msg.Data)
 						eventChan <- s.FSUIPC_ToInterface(linkage, reflect.ValueOf(v))
 					}
@@ -139,7 +139,7 @@ func (s *SimGo) FSUIPC_Remap(val reflect.Value) []FSUIPC_Offset {
 	return vars
 }
 
-func (s *SimGo) FSUIPC_ToInterface(data FSUIPC_Offset_Linkage, dst reflect.Value) interface{} {
+func (s *SimGo) FSUIPC_ToInterface(data Offsets, dst reflect.Value) interface{} {
 	val := reflect.ValueOf(data)
 	r := reflect.New(reflect.TypeOf(dst.Interface())).Elem()
 	for i := 0; i < val.Type().NumField(); i++ {
@@ -176,6 +176,8 @@ func setValueForField(srcType reflect.StructField, src reflect.Value, dst reflec
 		} else {
 			return errors.New(fmt.Sprintf("[mach   ] %s = %s", srcType.Name, dst.String()))
 		}
+	case "fractional":
+		dst.SetInt(int64(float64(src.Int()/(65535*65535)) * 3.28084))
 	case "degrees":
 		dst.SetFloat(src.Float() * 360 / (65536 * 65536))
 	case "raddeg":
@@ -184,12 +186,16 @@ func setValueForField(srcType reflect.StructField, src reflect.Value, dst reflec
 		dst.SetFloat(src.Float() / 624)
 	case "radio":
 		dst.SetInt(int64(float64(src.Int()/65536) * 3.28084))
-	case "floating":
-		dst.SetInt(int64(float64(src.Int() * 90.0 / (10001750.0 * 65536.0 * 65536.0))))
+	case "lat":
+		dst.SetFloat(src.Float() * 90.0 / (10001750.0 * 65536.0 * 65536.0))
+	case "lng":
+		dst.SetFloat(src.Float() * 360.0 / (65536.0 * 65536.0 * 65536.0 * 65536.0))
 	case "ftm":
 		dst.SetInt(int64(float64(src.Int()*60.0) * 3.28084 / 256))
 	case "velocity":
 		dst.SetInt(int64(float64(src.Int()/65536) * 1.944))
+	case "magvar":
+		dst.SetFloat(src.Float() * 360 / 65536)
 	case "feet":
 		if src.CanFloat() {
 			dst.SetInt(int64(math.Round(src.Float() * 3.28084)))
@@ -236,7 +242,7 @@ func setValueForField(srcType reflect.StructField, src reflect.Value, dst reflec
 	return nil
 }
 
-func (c *FSUIPC_Offset_Linkage) LoadFromMap(m map[string]interface{}) error {
+func (c *Offsets) LoadFromMap(m map[string]interface{}) error {
 	data, err := json.Marshal(m)
 	if err == nil {
 		err = json.Unmarshal(data, c)
