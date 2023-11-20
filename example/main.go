@@ -30,7 +30,7 @@ func main() {
 	eventChan := make(chan interface{})
 	payloadChan := make(chan interface{})
 
-	sim.ReadData("event", simgo.Offsets{}, eventChan, payloadChan)
+	sim.ReadData("event", simgo.Report{}, eventChan, payloadChan)
 
 	for {
 		select {

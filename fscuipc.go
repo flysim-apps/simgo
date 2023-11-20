@@ -162,7 +162,7 @@ func (s *SimGo) FSUIPC_ToInterface(data Offsets, dst reflect.Value) interface{} 
 }
 
 func setValueForField(srcType reflect.StructField, src reflect.Value, dst reflect.Value) error {
-	unitTag, _ := srcType.Tag.Lookup("unit")
+	unitTag, _ := srcType.Tag.Lookup("fsuipc")
 	switch unitTag {
 	case "knots":
 		if src.CanInt() {
@@ -224,7 +224,7 @@ func setValueForField(srcType reflect.StructField, src reflect.Value, dst reflec
 		}
 	case "bits":
 	default:
-		//fmt.Printf("%s (%s) = %s\n", srcType.Name, src.Kind(), dst.String())
+		fmt.Printf("%s (%s) = %s\n", srcType.Name, src.Kind(), dst.String())
 		if src.CanFloat() {
 			dst.SetFloat(src.Float())
 		} else if src.CanInt() {
