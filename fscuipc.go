@@ -219,12 +219,12 @@ func setValueForField(srcType reflect.StructField, src reflect.Value, dst reflec
 		if src.Kind().String() == "float64" {
 			dst.SetFloat(float64(src.Float()) / total * 100)
 		} else {
-			fmt.Printf("%s (%s) = %s\n", srcType.Name, src.Kind(), dst.String())
+			//fmt.Printf("%s (%s) = %s\n", srcType.Name, src.Kind(), dst.String())
 			dst.SetFloat(float64(src.Int()) / total * 100)
 		}
 	case "bits":
 	default:
-		fmt.Printf("%s (%s) = %s\n", srcType.Name, src.Kind(), dst.String())
+		//fmt.Printf("%s (%s) = %s\n", srcType.Name, src.Kind(), dst.String())
 		if src.CanFloat() {
 			dst.SetFloat(src.Float())
 		} else if src.CanInt() {
