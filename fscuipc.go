@@ -70,11 +70,9 @@ func (s *SimGo) ReadData(name string, v interface{}, eventChan chan interface{},
 			var msg FSUIPC_Response
 			if err := wsjson.Read(s.Context, s.WS, &msg); err != nil {
 				s.Logger.Errorf("Unable to read from socket: %s", err.Error())
-				if strings.Contains(err.Error(), FORCIBLY_CLOSED_CONNECTION) {
-					s.Error = err
-					s.TrackFailed <- true
-				}
-				continue
+				s.Error = err
+				s.TrackFailed <- true
+				return
 			}
 
 			if msg.Success {
