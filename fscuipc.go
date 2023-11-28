@@ -48,6 +48,7 @@ func (s *SimGo) Payload(interval int) error {
 		WeightUnit: "Lbs",
 		VolumeUnit: "gal",
 		LengthUnit: "ft",
+		Interval:   interval,
 	}
 
 	s.Logger.Debugf("CMD: %+v", cmd)
