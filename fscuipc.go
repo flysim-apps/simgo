@@ -146,12 +146,6 @@ func (s *SimGo) FSUIPC_ToInterface(data Offsets, dst reflect.Value) interface{} 
 		for j := 0; j < dst.NumField(); j++ {
 			dstField := dst.Type().Field(j)
 			if val.Type().Field(i).Name == dstField.Name {
-				typeTag, _ := val.Type().Field(i).Tag.Lookup("type")
-				indexTag, _ := val.Type().Field(i).Tag.Lookup("index")
-				if typeTag == "bits" && indexTag != "" {
-					continue
-				}
-
 				if err := setValueForField(val.Type().Field(i), val.Field(i), r.Field(j)); err != nil {
 					s.Logger.Warningf("Failed set value for %s", err.Error())
 				}
@@ -219,12 +213,13 @@ func setValueForField(srcType reflect.StructField, src reflect.Value, dst reflec
 		if src.Kind().String() == "float64" {
 			dst.SetFloat(float64(src.Float()) / total * 100)
 		} else {
-			//fmt.Printf("%s (%s) = %s\n", srcType.Name, src.Kind(), dst.String())
 			dst.SetFloat(float64(src.Int()) / total * 100)
 		}
 	case "bits":
+		//fmt.Printf("%s (%s) = %v\n", srcType.Name, src.Kind(), src)
+		dst.Set(src)
 	default:
-		//fmt.Printf("%s (%s) = %s\n", srcType.Name, src.Kind(), dst.String())
+		//fmt.Printf("%s (%s) = %v\n", srcType.Name, src.Kind(), src)
 		if src.CanFloat() {
 			dst.SetFloat(src.Float())
 		} else if src.CanInt() {

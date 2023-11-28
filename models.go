@@ -130,7 +130,7 @@ type Offsets struct {
 	BatterySwitch        int          `address:"0x281C" type:"uint" size:"4" fsuipc:"bool"`
 	ExtPowerOn           int          `address:"0x07AB" type:"uint" size:"1" fsuipc:"bool"`
 	IsDoorsOpen          int          `address:"0x2A70" type:"uint" size:"8" fsuipc:"bool"`
-	Lights               map[int]bool `address:"0x0D0C" type:"bits" size:"2"`
+	Lights               map[int]bool `address:"0x0D0C" type:"bits" size:"2" fsuipc:"bits"`
 	FastenSeatBealts     int          `address:"0x341D" type:"int" size:"1" fsuipc:"bool"`
 	NoSmoking            int          `address:"0x341C" type:"int" size:"1" fsuipc:"bool"`
 	StallWarning         int          `address:"0x036C" type:"int" size:"1" fsuipc:"bool"`
@@ -147,7 +147,7 @@ type Offsets struct {
 	Engine2Combustion    int          `address:"0x092C" type:"int" size:"2" fsuipc:"bool"`
 	Engine3Combustion    int          `address:"0x09C4" type:"int" size:"2" fsuipc:"bool"`
 	Engine4Combustion    int          `address:"0x0A5C" type:"int" size:"2" fsuipc:"bool"`
-	EngineFailed         map[int]bool `address:"0x0B6B" type:"bits" size:"1"`
+	EngineFailed         map[int]bool `address:"0x0B6B" type:"bits" size:"1" fsuipc:"bits"`
 	Engine1TurbN1        int          `address:"0x0898" type:"int" size:"2" fsuipc:"percent"`
 	Engine2TurbN1        int          `address:"0x0930" type:"int" size:"2" fsuipc:"percent"`
 	Engine3TurbN1        int          `address:"0x09C8" type:"int" size:"2" fsuipc:"percent"`
