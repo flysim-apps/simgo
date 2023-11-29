@@ -42,8 +42,9 @@ func main() {
 			}
 		case result := <-payloadChan:
 			logger.Debugf("Payload: %+v", result)
-		case <-sim.TrackFailed:
-			logger.Errorf("Track failed: %s", sim.Error.Error())
+		case err := <-sim.Error:
+			logger.Errorf("Track failed: %s", err.Error())
+			return
 		}
 	}
 

@@ -17,19 +17,18 @@ import (
 )
 
 type SimGo struct {
-	Error       error
-	State       chan int
-	Connection  <-chan bool
-	TrackEvent  chan interface{}
-	TrackPause  chan bool
-	TrackCrash  <-chan bool
-	TrackFailed <-chan bool
-	Logger      *logging.Logger
-	Socket      *websockets.Websocket
-	Context     context.Context
-	WS          *websocket.Conn
-	Provider    Provider
-	Alive       bool
+	Error      chan error
+	State      chan int
+	Connection <-chan bool
+	TrackEvent chan interface{}
+	TrackPause chan bool
+	TrackCrash <-chan bool
+	Logger     *logging.Logger
+	Socket     *websockets.Websocket
+	Context    context.Context
+	WS         *websocket.Conn
+	Provider   Provider
+	Alive      bool
 }
 
 var maxTriesInitial int
@@ -39,7 +38,7 @@ var simPaused = false
 
 // creates new simgo instance
 func NewSimGo(logger *logging.Logger, provider Provider) *SimGo {
-	return &SimGo{State: make(chan int, 0), TrackEvent: make(chan interface{}, 0), TrackPause: make(chan bool, 0), TrackCrash: make(chan bool, 0), TrackFailed: make(chan bool, 1), Logger: logger, Provider: provider}
+	return &SimGo{State: make(chan int, 0), TrackEvent: make(chan interface{}, 0), TrackPause: make(chan bool, 0), TrackCrash: make(chan bool, 0), Logger: logger, Provider: provider, Error: make(chan error, 1)}
 }
 
 // starts web socket server on given host and port
