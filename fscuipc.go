@@ -105,6 +105,7 @@ func (s *SimGo) ReadData(name string, v interface{}, eventChan chan interface{},
 					go func() {
 						<-s.TrackFailed
 					}()
+					return
 				}
 			}
 		}
