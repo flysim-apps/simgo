@@ -70,7 +70,9 @@ func (s *SimGo) ReadData(name string, v interface{}, eventChan chan interface{},
 			if err := wsjson.Read(s.Context, s.WS, &msg); err != nil {
 				s.Logger.Errorf("Unable to read from socket: %s", err.Error())
 				s.Error = err
-				<-s.TrackFailed
+				go func() {
+					<-s.TrackFailed
+				}()
 				return
 			}
 
@@ -100,7 +102,9 @@ func (s *SimGo) ReadData(name string, v interface{}, eventChan chan interface{},
 				s.Logger.Error(error)
 				if msg.ErrorCode == "NoFlightSim" {
 					s.Error = errors.New(fmt.Sprintf("%v - %s", msg.ErrorCode, msg.ErrorMessage))
-					<-s.TrackFailed
+					go func() {
+						<-s.TrackFailed
+					}()
 				}
 			}
 		}
