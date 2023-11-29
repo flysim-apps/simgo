@@ -22,14 +22,14 @@ type SimGo struct {
 	Connection  <-chan bool
 	TrackEvent  chan interface{}
 	TrackPause  chan bool
-	TrackCrash  chan bool
-	TrackFailed chan bool
+	TrackCrash  <-chan bool
+	TrackFailed <-chan bool
 	Logger      *logging.Logger
 	Socket      *websockets.Websocket
 	Context     context.Context
 	WS          *websocket.Conn
 	Provider    Provider
-	Alive       chan bool
+	Alive       bool
 }
 
 var maxTriesInitial int
