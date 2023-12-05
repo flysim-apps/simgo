@@ -35,10 +35,10 @@ func main() {
 	for {
 		select {
 		case result := <-eventChan:
-			//logger.Debugf("===================================================================================")
+			logger.Debugf("===================================================================================")
 			val := reflect.ValueOf(result)
 			for i := 0; i < val.Type().NumField(); i++ {
-				//	logger.Debugf("%s = %+v", val.Type().Field(i).Name, val.Field(i))
+				logger.Debugf("%s = %+v", val.Type().Field(i).Name, val.Field(i))
 			}
 		case result := <-payloadChan:
 			logger.Debugf("Payload: %+v", result)

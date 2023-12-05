@@ -105,7 +105,7 @@ type Offsets struct {
 	Agl                  float64      `address:"0x6020" type:"float" size:"8" fsuipc:"feet"`
 	Alt                  int64        `address:"0x0570" type:"int" size:"8" fsuipc:"fractional"`
 	AltRadio             int64        `address:"0x31E4" type:"int" size:"4" fsuipc:"radio"`
-	AltIndicated         int64        `address:"0x3324" type:"float" size:"4"`
+	AltIndicated         int64        `address:"0x3324" type:"uint" size:"4"`
 	Lat                  float64      `address:"0x0560" type:"int" size:"8" fsuipc:"lat"`
 	Lon                  float64      `address:"0x0568" type:"int" size:"8" fsuipc:"lng"`
 	Heading              float64      `address:"0x0580" type:"uint" size:"4" fsuipc:"degrees"`
