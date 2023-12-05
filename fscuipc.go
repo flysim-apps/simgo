@@ -63,18 +63,14 @@ func (s *SimGo) Payload(interval int) error {
 const FORCIBLY_CLOSED_CONNECTION = "An existing connection was forcibly closed by the remote host"
 
 func (s *SimGo) ReadData(name string, v interface{}, eventChan chan interface{}, payloadChan chan interface{}) {
-	done := make(chan bool)
 	go func() {
 		defer s.FSUIPC_Close()
 		for {
 			var msg FSUIPC_Response
 			if err := wsjson.Read(s.Context, s.WS, &msg); err != nil {
 				s.Logger.Errorf("Unable to read from socket: %s", err.Error())
-				if strings.Contains(err.Error(), FORCIBLY_CLOSED_CONNECTION) {
-					s.Error = err
-					s.TrackFailed <- true
-				}
-				continue
+				s.Error <- err
+				return
 			}
 
 			if msg.Success {
@@ -102,9 +98,8 @@ func (s *SimGo) ReadData(name string, v interface{}, eventChan chan interface{},
 				error += fmt.Sprintf("%v - %s", msg.ErrorCode, msg.ErrorMessage)
 				s.Logger.Error(error)
 				if msg.ErrorCode == "NoFlightSim" {
-					s.Error = errors.New(fmt.Sprintf("%v - %s", msg.ErrorCode, msg.ErrorMessage))
-					s.TrackFailed <- true
-					close(done)
+					s.Error <- errors.New(fmt.Sprintf("%v - %s", msg.ErrorCode, msg.ErrorMessage))
+					return
 				}
 			}
 		}
